@@ -1,0 +1,19 @@
+{
+  "name": "python-exercises",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "preview": "npx serve dist"
+  },
+  "dependencies": {
+    "codemirror": "^6.0.1",
+    "@codemirror/lang-python": "^6.1.6",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "marked": "^15.0.0",
+    "pyodide": "^0.27.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} — Python Exercises</title>
+  <link rel="stylesheet" href="{{BASE}}assets/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <header class="page-header">
+      <a class="back-link" href="{{BASE}}">← Home</a>
+      <h1>{{TITLE}}</h1>
+    </header>
+
+    <section class="instructions card">
+      {{DESCRIPTION_HTML}}
+    </section>
+
+    <section class="card">
+      <h2>Exercises</h2>
+      <ul id="exercise-list" class="exercise-list">
+        {{EXERCISE_LIST_HTML}}
+      </ul>
+
+      <div class="download-section">
+        <button id="download-btn" class="btn btn-primary">⬇ Download All My Code</button>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Embedded assignment data (filled by build.js) -->
+  <script id="assignment-data" type="application/json">{{ASSIGNMENT_DATA}}</script>
+
+  <!-- App bundle -->
+  <script type="module" src="{{BASE}}assets/assignment-page.js"></script>
+</body>
+</html>

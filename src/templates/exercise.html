@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} — Python Exercises</title>
+  <link rel="stylesheet" href="{{BASE}}assets/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <header class="page-header">
+      <a id="back-link" class="back-link" href="" style="display:none">← Back to Assignment</a>
+      <!-- <h1>{{TITLE}}</h1> -->
+    </header>
+
+    <section class="instructions card">
+      {{INSTRUCTIONS_HTML}}
+    </section>
+
+    <section class="editor-section card">
+      <div class="editor-header">
+        <span>solution.py</span>
+      </div>
+      <div id="editor"></div>
+    </section>
+
+    <section class="controls">
+      <div class="controls-left">
+        <button id="run-btn" class="btn btn-primary" disabled>▶ Run</button>
+        <button id="test-btn" class="btn btn-secondary" disabled {{TEST_ATTR}}>🧪 Test</button>
+      </div>
+      <div class="controls-right">
+        <button id="reset-btn" class="btn btn-warning" disabled>↺ Reset</button>
+        <button id="done-btn" class="btn btn-success" disabled>✓ Done</button>
+      </div>
+    </section>
+
+    <section class="terminal-section card">
+      <div class="terminal-header">
+        <span>Output</span>
+        <button id="clear-btn" class="btn-small">Clear</button>
+      </div>
+      <div id="terminal" class="terminal">
+        <span class="muted">Click ▶ Run to execute your code.</span>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Reset confirmation modal -->
+  <div id="reset-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <h3>Reset exercise?</h3>
+      <p>This will discard all your changes and restore the original starting code.</p>
+      <div class="modal-actions">
+        <button id="reset-cancel" class="btn btn-cancel">Cancel</button>
+        <button id="reset-confirm" class="btn btn-warning">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay -->
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Loading Python environment…</p>
+  </div>
+
+  <!-- Embedded exercise data (filled by build.js) -->
+  <script id="exercise-data" type="application/json">{{EXERCISE_DATA}}</script>
+
+  <!-- Pyodide (loaded as global, NOT bundled) -->
+  <script src="{{BASE}}pyodide/pyodide.js"></script>
+
+  <!-- App bundle -->
+  <script type="module" src="{{BASE}}assets/exercise-page.js"></script>
+</body>
+</html>
