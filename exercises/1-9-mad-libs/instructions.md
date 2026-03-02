@@ -1,4 +1,4 @@
-# 1.6 Mad Libs (input, strings, print)
+# 1.9 Mad Libs (input, strings, print)
 
 ## Task
 

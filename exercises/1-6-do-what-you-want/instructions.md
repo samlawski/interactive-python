@@ -1,4 +1,4 @@
-# 1.9 Do What You Want
+# 1.6 Do What You Want
 
 ## Task
 
