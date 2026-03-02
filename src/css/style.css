@@ -502,10 +502,22 @@ details[open] summary {
   font-weight: 500;
 }
 
-.download-section {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.section-header h2 {
+  margin: 0;
+}
+
+.btn-small-dl {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  white-space: nowrap;
 }
 
 /* --- Index Page --------------------------------------------------- */

@@ -29,7 +29,7 @@ function updateStatusIcons() {
       icon.textContent = '📝';
       icon.title = 'In progress';
     } else {
-      icon.textContent = '⬜';
+      icon.textContent = '⚪️';
       icon.title = 'Not started';
     }
   }
