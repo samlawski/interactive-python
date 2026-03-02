@@ -1,0 +1,122 @@
+import sys
+import io
+
+def run_code(input_data=""):
+    _stdin, _stdout = sys.stdin, sys.stdout
+    sys.stdin = io.StringIO(input_data)
+    sys.stdout = captured = io.StringIO()
+    try:
+        with open('/home/pyodide/solution.py') as f:
+            exec(compile(f.read(), 'solution.py', 'exec'), {'__name__': '__main__'})
+    except Exception as e:
+        sys.stdin, sys.stdout = _stdin, _stdout
+        raise RuntimeError(f"Your code raised an error: {type(e).__name__}: {e}")
+    finally:
+        sys.stdin, sys.stdout = _stdin, _stdout
+    return captured.getvalue()
+
+passed = 0
+failed = 0
+total = 0
+
+def check(condition, message):
+    global passed, failed, total
+    total += 1
+    if condition:
+        passed += 1
+        print(f"  ✅ {message}")
+    else:
+        failed += 1
+        print(f"  ❌ {message}")
+
+print("Running tests...\n")
+
+# Load student code
+try:
+    with open('/home/pyodide/solution.py') as f:
+        code = f.read()
+    ns = {}
+    exec(compile(code, 'solution.py', 'exec'), ns)
+    safe_calculate = ns.get('safe_calculate')
+except Exception as e:
+    print(f"  ❌ Could not load your code: {type(e).__name__}: {e}")
+    failed += 1
+    total += 1
+    safe_calculate = None
+
+# Check function exists
+if safe_calculate is None:
+    check(False, "Function 'safe_calculate' is defined")
+else:
+    check(callable(safe_calculate), "Function 'safe_calculate' is defined")
+
+if safe_calculate:
+    # Test addition
+    try:
+        result = safe_calculate("10", "5", "+")
+        check(result == 15.0, f"safe_calculate('10', '5', '+') == 15.0 (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('10', '5', '+') raised {type(e).__name__}: {e}")
+
+    # Test subtraction
+    try:
+        result = safe_calculate("10", "3", "-")
+        check(result == 7.0, f"safe_calculate('10', '3', '-') == 7.0 (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('10', '3', '-') raised {type(e).__name__}: {e}")
+
+    # Test multiplication
+    try:
+        result = safe_calculate("4", "2.5", "*")
+        check(result == 10.0, f"safe_calculate('4', '2.5', '*') == 10.0 (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('4', '2.5', '*') raised {type(e).__name__}: {e}")
+
+    # Test division
+    try:
+        result = safe_calculate("10", "4", "/")
+        check(result == 2.5, f"safe_calculate('10', '4', '/') == 2.5 (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('10', '4', '/') raised {type(e).__name__}: {e}")
+
+    # Test invalid number
+    try:
+        result = safe_calculate("hello", "5", "+")
+        check(result == "Invalid number", f"safe_calculate('hello', '5', '+') == 'Invalid number' (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('hello', '5', '+') raised {type(e).__name__}: {e}")
+
+    # Test invalid second number
+    try:
+        result = safe_calculate("5", "world", "*")
+        check(result == "Invalid number", f"safe_calculate('5', 'world', '*') == 'Invalid number' (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('5', 'world', '*') raised {type(e).__name__}: {e}")
+
+    # Test division by zero
+    try:
+        result = safe_calculate("10", "0", "/")
+        check(result == "Division by zero", f"safe_calculate('10', '0', '/') == 'Division by zero' (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('10', '0', '/') raised {type(e).__name__}: {e}")
+
+    # Test invalid operator
+    try:
+        result = safe_calculate("10", "5", "^")
+        check(result == "Invalid operator", f"safe_calculate('10', '5', '^') == 'Invalid operator' (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('10', '5', '^') raised {type(e).__name__}: {e}")
+
+    # Test invalid operator %
+    try:
+        result = safe_calculate("10", "5", "%")
+        check(result == "Invalid operator", f"safe_calculate('10', '5', '%') == 'Invalid operator' (got: {result})")
+    except Exception as e:
+        check(False, f"safe_calculate('10', '5', '%') raised {type(e).__name__}: {e}")
+
+print(f"\n{'=' * 40}")
+if failed == 0:
+    print(f"🎉 All {total} tests passed!")
+else:
+    print(f"Result: {passed}/{total} tests passed, {failed} failed.")
+    print("Keep trying! You can do it! 💪")
