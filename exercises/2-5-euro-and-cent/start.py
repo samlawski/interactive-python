@@ -1,1 +1,5 @@
-# Ask the user for a price and separate it into euros and cents.
+# 1) input price as float
+
+# 2) separate euro an cent value
+
+# 3) print 

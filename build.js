@@ -82,12 +82,13 @@ function parseFrontmatter(text) {
   return { meta, body: match[2] };
 }
 
-/** Convert a folder name like "1-hello-world" to a readable title. */
+/** Convert a folder name like "1-1-hello-world" to a readable title. */
 function folderToTitle(name) {
   return name
-    .replace(/^\d+-/, '')        /* strip leading number */
-    .replace(/-/g, ' ')          /* dashes → spaces */
-    .replace(/\b\w/g, (c) => c.toUpperCase()); /* Title Case */
+    .replace(/^(\d+)-(\d+)-/, '$1.$2 ')  /* "1-1-" → "1.1 " */
+    .replace(/^\d+-/, '')                 /* fallback: strip single leading number */
+    .replace(/-/g, ' ')                   /* dashes → spaces */
+    .replace(/\b[a-zA-Z]/g, (c) => c.toUpperCase()); /* Title Case (skip digits) */
 }
 
 /** Render Markdown → HTML (with raw HTML pass-through). */

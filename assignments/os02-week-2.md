@@ -12,13 +12,9 @@ exercises:
   - 2-9-leap-year
 ---
 
-Welcome to the second section of exercises! This week focuses on **type coercion** and **conditionals**. You'll practice converting between data types and making decisions with `if`, `elif`, and `else`.
+Welcome to the second section of exercises! 
 
-Feel free to go through the exercises in any order you like, although the earlier ones are going to be a bit easier.
-
-Your progress is saved locally on your computer. So you may take a break and return later.
-
-> 🤖 **Important**: Do not use generative AI or search engines to find the solution. **You only learn by practicing and struggling**!
+> 🤖 **Important Reminder**: Do not use generative AI or search engines to find the solution. **You only learn by practicing and struggling**!
 >
 >If you get stuck and really don't know the answer return to the learning material.
 
