@@ -6,10 +6,10 @@ exercises:
   - 1-3-area-of-triangle
   - 1-4-name-formatting
   - 1-5-area-volume-sphere
-  - 1-6-mad-libs
+  - 1-6-do-what-you-want
   - 1-7-swap-variables
   - 1-8-true-or-false
-  - 1-9-do-what-you-want
+  - 1-9-mad-libs
 ---
 
 Welcome to the first section of exercises. Feel free to go through them in any order you like, although the earlier ones are going to be a bit easier. 
