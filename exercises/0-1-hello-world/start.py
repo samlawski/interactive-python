@@ -12,3 +12,5 @@ for count, letter in enumerate(name):
     print(f"So that's {count + 1} letters so far.")
 
 print(f"Your name has {len(name)} letters in it.")
+
+
