@@ -205,7 +205,7 @@ function generateAssignmentPages(assignments) {
         (ex) =>
           `<li>
             <span id="status-${ex.id}" class="status-icon">⚪️</span>
-            <a href="${basePath}exercises/${ex.id}/?from=${a.id}" target="_blank">${escapeHtml(ex.title)}</a>
+            <a href="${basePath}exercises/${ex.id}/?from=${a.id}">${escapeHtml(ex.title)}</a>
           </li>`,
       )
       .join('\n        ');
