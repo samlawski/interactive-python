@@ -180,6 +180,7 @@ function generateExercisePages(exercises) {
     const html = template
       .replace(/\{\{TITLE\}\}/g, escapeHtml(ex.title))
       .replace('{{INSTRUCTIONS_HTML}}', ex.instructionsHtml)
+      .replace('{{INSTRUCTIONS_ATTR}}', ex.instructionsHtml.trim() ? '' : 'style="display:none"')
       .replace('{{TEST_ATTR}}', ex.hasTest ? '' : 'style="display:none"')
       .replace('{{EXERCISE_DATA}}', json)
       .replace(/\{\{BASE\}\}/g, basePath);

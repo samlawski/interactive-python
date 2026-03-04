@@ -2,6 +2,7 @@
 title: Hello OS 2026!
 exercises:
   - 0-1-hello-world
+  - 0-2-blank
 ---
 
 This is a quick warm-up exercise to make sure everything works. Read the code, run it, then fix the bug the test finds.
