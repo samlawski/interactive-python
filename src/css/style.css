@@ -231,7 +231,6 @@ details[open] summary {
 
 .editor-section {
   padding: 0;
-  overflow: hidden;
 }
 
 .editor-header {
@@ -248,12 +247,11 @@ details[open] summary {
 
 .cm-editor {
   font-size: 0.95rem;
-  max-height: 420px;
-  overflow-y: auto;
 }
 
 .cm-editor .cm-scroller {
   font-family: var(--font-mono);
+  max-height: 420px;
 }
 
 .cm-editor.cm-focused {
@@ -642,7 +640,7 @@ details[open] summary {
     justify-content: center;
   }
 
-  .cm-editor {
+  .cm-editor .cm-scroller {
     max-height: 300px;
   }
 
