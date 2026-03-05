@@ -238,7 +238,7 @@ function generateIndexPage(assignments, exercises) {
   const basePath = './';
 
   const json = JSON.stringify({
-    startCode: '# Welcome to the Python Playground!\n# Write your code here and press ▶ Run\n\n\n\n',
+    startCode: '# Write your Python code here and press ▶ Run\n\n\n\n',
     basePath,
   });
 
