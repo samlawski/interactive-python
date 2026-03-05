@@ -237,38 +237,14 @@ function generateIndexPage(assignments, exercises) {
   );
   const basePath = './';
 
-  /* Assignments section */
-  let assignmentsSection = '';
-  if (assignments.length) {
-    const items = assignments
-      .map(
-        (a) =>
-          `<li><a href="assignments/${a.id}/">${escapeHtml(a.title)}</a></li>`,
-      )
-      .join('\n        ');
-    assignmentsSection = `
-      <p class="section-title">Assignments</p>
-      <ul class="card-list">${items}</ul>`;
-  }
-
-  /* Exercises section */
-  let exercisesSection = '';
-  if (exercises.length) {
-    const items = exercises
-      .map(
-        (e) =>
-          `<li><a href="exercises/${e.id}/">${escapeHtml(e.title)}</a></li>`,
-      )
-      .join('\n        ');
-    exercisesSection = `
-      <p class="section-title">All Exercises</p>
-      <ul class="card-list">${items}</ul>`;
-  }
+  const json = JSON.stringify({
+    startCode: '# Welcome to the Python Playground!\n# Write your code here and press ▶ Run\n\nprint("Hello, world!")\n',
+    basePath,
+  });
 
   const html = template
     .replace(/\{\{BASE\}\}/g, basePath)
-    .replace('{{ASSIGNMENTS_SECTION}}', assignmentsSection)
-    .replace('{{EXERCISES_SECTION}}', exercisesSection);
+    .replace('{{PLAYGROUND_DATA}}', json);
 
   fs.writeFileSync(path.join(DIST, 'index.html'), html);
 }
