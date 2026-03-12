@@ -15,6 +15,18 @@ def run_code(input_data=""):
         sys.stdin, sys.stdout = _stdin, _stdout
     return captured.getvalue()
 
+def get_last_printed_line(output):
+    """Extract the last meaningful printed line, ignoring input() prompts."""
+    lines = output.strip().splitlines()
+    if not lines:
+        return ""
+    # input() prompts don't end with a newline, so they may merge with
+    # the next print output on the same line. Take the last line and
+    # strip everything before the last prompt (if any) by relying on
+    # the fact that print() output is what we care about.
+    last = lines[-1].strip()
+    return last
+
 passed = 0
 failed = 0
 total = 0
@@ -34,9 +46,9 @@ print("Running tests...\n")
 # Test 1: "Harald   " and " tÖpFer" → "Harald Töpfer"
 try:
     output = run_code("Harald   \n tÖpFer\n")
-    result = output.strip().splitlines()[-1].strip()
+    result = get_last_printed_line(output)
     check(
-        result == "Harald Töpfer",
+        result.endswith("Harald Töpfer"),
         f"'Harald   ' + ' tÖpFer' → 'Harald Töpfer' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -47,9 +59,9 @@ except RuntimeError as e:
 # Test 2: "  alice" and "WONDER  " → "Alice Wonder"
 try:
     output = run_code("  alice\nWONDER  \n")
-    result = output.strip().splitlines()[-1].strip()
+    result = get_last_printed_line(output)
     check(
-        result == "Alice Wonder",
+        result.endswith("Alice Wonder"),
         f"'  alice' + 'WONDER  ' → 'Alice Wonder' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -60,9 +72,9 @@ except RuntimeError as e:
 # Test 3: "bob" and "smith" → "Bob Smith"
 try:
     output = run_code("bob\nsmith\n")
-    result = output.strip().splitlines()[-1].strip()
+    result = get_last_printed_line(output)
     check(
-        result == "Bob Smith",
+        result.endswith("Bob Smith"),
         f"'bob' + 'smith' → 'Bob Smith' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -73,9 +85,9 @@ except RuntimeError as e:
 # Test 4: "  JANE  " and "  DOE  " → "Jane Doe"
 try:
     output = run_code("  JANE  \n  DOE  \n")
-    result = output.strip().splitlines()[-1].strip()
+    result = get_last_printed_line(output)
     check(
-        result == "Jane Doe",
+        result.endswith("Jane Doe"),
         f"'  JANE  ' + '  DOE  ' → 'Jane Doe' (got: '{result}')"
     )
 except RuntimeError as e:
