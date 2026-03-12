@@ -87,6 +87,8 @@ export async function initPyodide(basePath) {
 export async function runCode(pyodide, code, terminal) {
   const inputs = [];
 
+  _clearUserGlobals(pyodide);
+
   // eslint-disable-next-line no-constant-condition
   while (true) {
     terminal.clear();
@@ -118,6 +120,7 @@ export async function runCode(pyodide, code, terminal) {
  * trigger _NeedInputError — no user interaction is required.
  */
 export async function runTests(pyodide, solutionCode, testCode, terminal) {
+  _clearUserGlobals(pyodide);
   _setupStdio(pyodide, terminal);
   pyodide.FS.writeFile('/home/pyodide/solution.py', solutionCode);
 
@@ -131,6 +134,18 @@ export async function runTests(pyodide, solutionCode, testCode, terminal) {
 /* ------------------------------------------------------------------ */
 /*  Internal helpers                                                   */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Remove user-defined names from Python globals so previous runs
+ * don't leak variables into the next execution.
+ */
+function _clearUserGlobals(pyodide) {
+  pyodide.runPython(`
+for _name in list(globals()):
+    if not _name.startswith('_'):
+        del globals()[_name]
+`);
+}
 
 /**
  * Configure stdout / stderr routing and expose JS helpers to Python.
