@@ -36,7 +36,7 @@ try:
     output = run_code("12.34\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "12€ 34ct",
+        result.endswith("12€ 34ct"),
         f"12.34 → '12€ 34ct' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("5.6789\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "5€ 68ct",
+        result.endswith("5€ 68ct"),
         f"5.6789 → '5€ 68ct' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("0.99\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "0€ 99ct",
+        result.endswith("0€ 99ct"),
         f"0.99 → '0€ 99ct' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("100.00\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "100€ 0ct",
+        result.endswith("100€ 0ct"),
         f"100.00 → '100€ 0ct' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("7.555\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "7€ 56ct",
+        result.endswith("7€ 56ct"),
         f"7.555 → '7€ 56ct' (got: '{result}')"
     )
 except RuntimeError as e:

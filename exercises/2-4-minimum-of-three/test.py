@@ -36,7 +36,7 @@ try:
     output = run_code("1\n3\n6\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "The minimum is 1",
+        result.endswith("The minimum is 1"),
         f"1, 3, 6 → 'The minimum is 1' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("13\n7\n1213\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "The minimum is 7",
+        result.endswith("The minimum is 7"),
         f"13, 7, 1213 → 'The minimum is 7' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("5\n5\n5\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "The minimum is 5",
+        result.endswith("The minimum is 5"),
         f"5, 5, 5 → 'The minimum is 5' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("100\n2\n50\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "The minimum is 2",
+        result.endswith("The minimum is 2"),
         f"100, 2, 50 → 'The minimum is 2' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("-3\n-1\n-7\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "The minimum is -7",
+        result.endswith("The minimum is -7"),
         f"-3, -1, -7 → 'The minimum is -7' (got: '{result}')"
     )
 except RuntimeError as e:

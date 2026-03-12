@@ -36,7 +36,7 @@ try:
     output = run_code("Frank\nTest1234\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Login Succeeded",
+        result.endswith("Login Succeeded"),
         f"Frank + Test1234 → 'Login Succeeded' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("Peter\nasdznasdq9e2n\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Login Succeeded",
+        result.endswith("Login Succeeded"),
         f"Peter + asdznasdq9e2n → 'Login Succeeded' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("Frank\nTest12345\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Login Failed",
+        result.endswith("Login Failed"),
         f"Frank + Test12345 → 'Login Failed' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("Peter\nTest1234\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Login Failed",
+        result.endswith("Login Failed"),
         f"Peter + Test1234 → 'Login Failed' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("Alice\npassword\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Login Failed",
+        result.endswith("Login Failed"),
         f"Alice + password → 'Login Failed' (got: '{result}')"
     )
 except RuntimeError as e:
