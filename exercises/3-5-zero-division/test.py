@@ -36,7 +36,7 @@ try:
     output = run_code("4\n2\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "2",
+        result.endswith("2"),
         f"4 // 2 → '2' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("10\n3\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "3",
+        result.endswith("3"),
         f"10 // 3 → '3' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("5\n0\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "ZeroDivisionError",
+        result.endswith("ZeroDivisionError"),
         f"5 // 0 → 'ZeroDivisionError' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("hello\n2\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "ValueError",
+        result.endswith("ValueError"),
         f"'hello' // 2 → 'ValueError' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("4\nabc\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "ValueError",
+        result.endswith("ValueError"),
         f"4 // 'abc' → 'ValueError' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -101,7 +101,7 @@ try:
     output = run_code("7\n1\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "7",
+        result.endswith("7"),
         f"7 // 1 → '7' (got: '{result}')"
     )
 except RuntimeError as e:

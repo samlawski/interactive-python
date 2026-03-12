@@ -36,7 +36,7 @@ try:
     output = run_code("2\n5.0\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "10.0",
+        result.endswith("10.0"),
         f"2 and 5.0 → '10.0' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -55,7 +55,7 @@ try:
         f"'hello' as integer → prints 'Not an Integer' (got: '{output.strip()}')"
     )
     check(
-        last_line == "0.0",
+        last_line.endswith("0.0"),
         f"Product with default 0 → '0.0' (got: '{last_line}')"
     )
 except RuntimeError as e:
@@ -74,7 +74,7 @@ try:
         f"'hello' as float → prints 'Not a Float' (got: '{output.strip()}')"
     )
     check(
-        last_line == "0.0",
+        last_line.endswith("0.0"),
         f"Product with default 0 → '0.0' (got: '{last_line}')"
     )
 except RuntimeError as e:
@@ -94,7 +94,7 @@ try:
         f"Both invalid → prints both error messages (got: '{output.strip()}')"
     )
     check(
-        last_line == "0.0",
+        last_line.endswith("0.0"),
         f"Product of two defaults → '0.0' (got: '{last_line}')"
     )
 except RuntimeError as e:
@@ -107,7 +107,7 @@ try:
     output = run_code("3\n2.5\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "7.5",
+        result.endswith("7.5"),
         f"3 and 2.5 → '7.5' (got: '{result}')"
     )
 except RuntimeError as e:

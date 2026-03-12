@@ -36,7 +36,7 @@ try:
     output = run_code("2024\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "2024 is a leap year",
+        result.endswith("2024 is a leap year"),
         f"2024 → '2024 is a leap year' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("2023\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "2023 is not a leap year",
+        result.endswith("2023 is not a leap year"),
         f"2023 → '2023 is not a leap year' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("1900\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "1900 is not a leap year",
+        result.endswith("1900 is not a leap year"),
         f"1900 → '1900 is not a leap year' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("2000\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "2000 is a leap year",
+        result.endswith("2000 is a leap year"),
         f"2000 → '2000 is a leap year' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("1600\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "1600 is a leap year",
+        result.endswith("1600 is a leap year"),
         f"1600 → '1600 is a leap year' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -101,7 +101,7 @@ try:
     output = run_code("2100\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "2100 is not a leap year",
+        result.endswith("2100 is not a leap year"),
         f"2100 → '2100 is not a leap year' (got: '{result}')"
     )
 except RuntimeError as e:

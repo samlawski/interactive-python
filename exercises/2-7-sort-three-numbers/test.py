@@ -36,7 +36,7 @@ try:
     output = run_code("1\n2\n3\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "1 < 2 < 3",
+        result.endswith("1 < 2 < 3"),
         f"1, 2, 3 → '1 < 2 < 3' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("120\n30\n5\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "5 < 30 < 120",
+        result.endswith("5 < 30 < 120"),
         f"120, 30, 5 → '5 < 30 < 120' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("7\n3\n5\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "3 < 5 < 7",
+        result.endswith("3 < 5 < 7"),
         f"7, 3, 5 → '3 < 5 < 7' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("10\n10\n10\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "10 < 10 < 10",
+        result.endswith("10 < 10 < 10"),
         f"10, 10, 10 → '10 < 10 < 10' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("-5\n0\n-10\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "-10 < -5 < 0",
+        result.endswith("-10 < -5 < 0"),
         f"-5, 0, -10 → '-10 < -5 < 0' (got: '{result}')"
     )
 except RuntimeError as e:

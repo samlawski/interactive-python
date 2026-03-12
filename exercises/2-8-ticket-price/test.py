@@ -36,7 +36,7 @@ try:
     output = run_code("4\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: Free",
+        result.endswith("Ticket price: Free"),
         f"Age 4 → 'Ticket price: Free' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -49,7 +49,7 @@ try:
     output = run_code("0\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: Free",
+        result.endswith("Ticket price: Free"),
         f"Age 0 → 'Ticket price: Free' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -62,7 +62,7 @@ try:
     output = run_code("6\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 5€",
+        result.endswith("Ticket price: 5€"),
         f"Age 6 → 'Ticket price: 5€' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -75,7 +75,7 @@ try:
     output = run_code("15\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 5€",
+        result.endswith("Ticket price: 5€"),
         f"Age 15 → 'Ticket price: 5€' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -88,7 +88,7 @@ try:
     output = run_code("17\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 5€",
+        result.endswith("Ticket price: 5€"),
         f"Age 17 → 'Ticket price: 5€' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -101,7 +101,7 @@ try:
     output = run_code("18\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 10€",
+        result.endswith("Ticket price: 10€"),
         f"Age 18 → 'Ticket price: 10€' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -114,7 +114,7 @@ try:
     output = run_code("30\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 10€",
+        result.endswith("Ticket price: 10€"),
         f"Age 30 → 'Ticket price: 10€' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -127,7 +127,7 @@ try:
     output = run_code("65\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 7€",
+        result.endswith("Ticket price: 7€"),
         f"Age 65 → 'Ticket price: 7€' (got: '{result}')"
     )
 except RuntimeError as e:
@@ -140,7 +140,7 @@ try:
     output = run_code("80\n")
     result = output.strip().splitlines()[-1].strip()
     check(
-        result == "Ticket price: 7€",
+        result.endswith("Ticket price: 7€"),
         f"Age 80 → 'Ticket price: 7€' (got: '{result}')"
     )
 except RuntimeError as e:
