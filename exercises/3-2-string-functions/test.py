@@ -35,7 +35,7 @@ print("Running tests...\n")
 try:
     with open('/home/pyodide/solution.py') as f:
         code = f.read()
-    ns = {}
+    ns = {'input': lambda *args: '1', 'print': lambda *args, **kwargs: None}
     exec(compile(code, 'solution.py', 'exec'), ns)
     is_all_caps = ns.get('is_all_caps')
     is_lower_case = ns.get('is_lower_case')
