@@ -66,7 +66,9 @@ try:
         source = f.read()
     # Check for direct assignment of the full list
     import re
-    has_overwrite = bool(re.search(r'my_list\s*=\s*\[1\s*,\s*2\s*,\s*3\s*,\s*4\s*,\s*5\s*,\s*6\s*,\s*7\s*,\s*8\s*,\s*9\s*,\s*10\s*\]', source))
+    # Strip comments so that hints in comments don't trigger false positives
+    code_only = re.sub(r'#.*', '', source)
+    has_overwrite = bool(re.search(r'my_list\s*=\s*\[1\s*,\s*2\s*,\s*3\s*,\s*4\s*,\s*5\s*,\s*6\s*,\s*7\s*,\s*8\s*,\s*9\s*,\s*10\s*\]', code_only))
     check(not has_overwrite, "Solution uses list operations (not just overwriting)")
 except Exception:
     pass

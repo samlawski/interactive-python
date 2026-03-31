@@ -55,7 +55,9 @@ try:
     with open('/home/pyodide/solution.py') as f:
         source = f.read()
     import re
-    uses_builtin = bool(re.search(r'\bsorted\s*\(', source)) or bool(re.search(r'\.sort\s*\(', source))
+    # Strip comments so that hints in comments don't trigger false positives
+    code_only = re.sub(r'#.*', '', source)
+    uses_builtin = bool(re.search(r'\bsorted\s*\(', code_only)) or bool(re.search(r'\.sort\s*\(', code_only))
     check(not uses_builtin, "Solution does not use built-in sort() or sorted()")
 except Exception:
     pass

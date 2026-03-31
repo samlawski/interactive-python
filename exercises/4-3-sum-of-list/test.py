@@ -55,7 +55,9 @@ try:
     with open('/home/pyodide/solution.py') as f:
         source = f.read()
     import re
-    uses_sum = bool(re.search(r'\bsum\s*\(', source))
+    # Strip comments so that hints in comments don't trigger false positives
+    code_only = re.sub(r'#.*', '', source)
+    uses_sum = bool(re.search(r'\bsum\s*\(', code_only))
     check(not uses_sum, "Solution does not use the built-in sum() function")
 except Exception:
     pass
