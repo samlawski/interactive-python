@@ -23,6 +23,7 @@ const __dirname = path.dirname(__filename);
 const DIST = path.join(__dirname, 'dist');
 const EXERCISES_DIR = path.join(__dirname, 'exercises');
 const ASSIGNMENTS_DIR = path.join(__dirname, 'assignments');
+const EXAMS_DIR = path.join(__dirname, 'exams');
 const TEMPLATES_DIR = path.join(__dirname, 'src', 'templates');
 
 /* ------------------------------------------------------------------ */
@@ -157,7 +158,68 @@ function readAssignments(exercises) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  3. Generate HTML pages                                             */
+/*  3. Read exams                                                      */
+/* ------------------------------------------------------------------ */
+
+function readExams() {
+  if (!fs.existsSync(EXAMS_DIR)) return [];
+
+  return fs
+    .readdirSync(EXAMS_DIR)
+    .filter((f) => f.endsWith('.md'))
+    .sort()
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(EXAMS_DIR, file), 'utf-8');
+      const id = file.replace(/\.md$/, '');
+
+      /* Split by --- separator into sections */
+      const sections = raw.split(/\r?\n---\r?\n/);
+
+      /* First section: title (h1) + description */
+      const headerSection = sections[0];
+      const titleMatch = headerSection.match(/^#\s+(.+)/m);
+      const title = titleMatch ? titleMatch[1].trim() : 'Exam';
+      const descriptionMd = titleMatch
+        ? headerSection.replace(/^#\s+.+\n*/m, '').trim()
+        : headerSection.trim();
+
+      /* Remaining sections: tasks */
+      const tasks = sections.slice(1).map((section, index) => {
+        const trimmed = section.trim();
+        if (!trimmed) return null;
+
+        const taskTitleMatch = trimmed.match(/^##\s+(.+)/m);
+        const taskTitle = taskTitleMatch
+          ? taskTitleMatch[1].trim()
+          : `Task ${index + 1}`;
+        const contentMd = taskTitleMatch
+          ? trimmed.replace(/^##\s+.+\n*/m, '').trim()
+          : trimmed;
+
+        const hasEditor = contentMd.includes('[[PYTHON-EDITOR]]');
+        const cleanedContentMd = contentMd
+          .replace(/\[\[PYTHON-EDITOR\]\]\s*/g, '')
+          .trim();
+
+        return {
+          id: `task-${index}`,
+          title: taskTitle,
+          contentHtml: cleanedContentMd ? renderMarkdown(cleanedContentMd) : '',
+          hasEditor,
+        };
+      }).filter(Boolean);
+
+      return {
+        id,
+        title,
+        descriptionHtml: renderMarkdown(descriptionMd),
+        tasks,
+      };
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/*  4. Generate HTML pages                                             */
 /* ------------------------------------------------------------------ */
 
 function generateExercisePages(exercises) {
@@ -225,6 +287,58 @@ function generateAssignmentPages(assignments) {
       .replace(/\{\{BASE\}\}/g, basePath);
 
     const dir = path.join(DIST, 'assignments', a.id);
+    mkDir(dir);
+    fs.writeFileSync(path.join(dir, 'index.html'), html);
+  }
+}
+
+function generateExamPages(exams) {
+  const template = fs.readFileSync(
+    path.join(TEMPLATES_DIR, 'exam.html'),
+    'utf-8',
+  );
+
+  for (const exam of exams) {
+    const basePath = '../../';
+    const needsPyodide = exam.tasks.some((t) => t.hasEditor);
+
+    /* Build tasks HTML */
+    const tasksHtml = exam.tasks
+      .map(
+        (task) =>
+          `<section class="exam-task card" data-task-id="${task.id}" data-has-editor="${task.hasEditor}">
+        <h2>${escapeHtml(task.title)}</h2>
+        ${task.contentHtml ? `<div class="task-content">${task.contentHtml}</div>` : ''}
+        <div class="task-answer-area"></div>
+      </section>`,
+      )
+      .join('\n      <hr class="task-separator">\n');
+
+    /* JSON data for client-side JS (only metadata, not full HTML) */
+    const json = JSON.stringify({
+      id: exam.id,
+      title: exam.title,
+      tasks: exam.tasks.map((t) => ({
+        id: t.id,
+        title: t.title,
+        hasEditor: t.hasEditor,
+      })),
+      basePath,
+    });
+
+    const pyodideScript = needsPyodide
+      ? `<script src="${basePath}pyodide/pyodide.js"></script>`
+      : '';
+
+    const html = template
+      .replace(/\{\{TITLE\}\}/g, escapeHtml(exam.title))
+      .replace('{{DESCRIPTION_HTML}}', exam.descriptionHtml)
+      .replace('{{TASKS_HTML}}', tasksHtml)
+      .replace('{{EXAM_DATA}}', json)
+      .replace('{{PYODIDE_SCRIPT}}', pyodideScript)
+      .replace(/\{\{BASE\}\}/g, basePath);
+
+    const dir = path.join(DIST, 'exams', exam.id);
     mkDir(dir);
     fs.writeFileSync(path.join(dir, 'index.html'), html);
   }
@@ -309,8 +423,9 @@ async function main() {
   /* Read content */
   const exercises = readExercises();
   const assignments = readAssignments(exercises);
+  const exams = readExams();
   console.log(
-    `  Found ${exercises.length} exercise(s), ${assignments.length} assignment(s)`,
+    `  Found ${exercises.length} exercise(s), ${assignments.length} assignment(s), ${exams.length} exam(s)`,
   );
 
   /* Bundle JS/CSS first (outputs to dist/assets/) */
@@ -322,7 +437,15 @@ async function main() {
   /* Generate HTML pages */
   generateExercisePages(exercises);
   generateAssignmentPages(assignments);
+  generateExamPages(exams);
   generateIndexPage(assignments, exercises);
+
+  /* Copy service worker to dist root (for exam offline support) */
+  const swSrc = path.join(__dirname, 'src', 'sw.js');
+  if (fs.existsSync(swSrc)) {
+    fs.copyFileSync(swSrc, path.join(DIST, 'sw.js'));
+  }
+
   console.log('  ✓ HTML pages generated');
 
   console.log(`\n✅ Done → ${path.relative(process.cwd(), DIST)}/\n`);

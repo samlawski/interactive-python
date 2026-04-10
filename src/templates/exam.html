@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}} — Exam</title>
+  <link rel="stylesheet" href="{{BASE}}assets/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <header class="page-header">
+      <h1>{{TITLE}}</h1>
+    </header>
+
+    <section class="instructions card">
+      {{DESCRIPTION_HTML}}
+    </section>
+
+    <div class="exam-download">
+      <button id="download-top-btn" class="btn btn-primary">⬇ Download My Answers</button>
+    </div>
+
+    <div id="exam-tasks">
+      {{TASKS_HTML}}
+    </div>
+
+    <div class="exam-download">
+      <button id="download-bottom-btn" class="btn btn-primary">⬇ Download My Answers</button>
+    </div>
+
+  </div>
+
+  <!-- Email prompt modal -->
+  <div id="email-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <h3>Enter your email address</h3>
+      <p>Please enter your email before downloading.</p>
+      <input id="email-input" type="email" class="email-input" placeholder="your@email.com" autocomplete="email">
+      <div class="modal-actions">
+        <button id="email-cancel" class="btn btn-cancel">Cancel</button>
+        <button id="email-confirm" class="btn btn-primary">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning modal -->
+  <div id="warning-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <h3 id="warning-title">Warning</h3>
+      <p id="warning-message"></p>
+      <div class="modal-actions">
+        <button id="warning-close" class="btn btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading overlay (hidden by default, shown when Pyodide loads) -->
+  <div id="loading" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Loading Python environment…</p>
+  </div>
+
+  <!-- Embedded exam data (filled by build.js) -->
+  <script id="exam-data" type="application/json">{{EXAM_DATA}}</script>
+
+  <!-- Pyodide (only included when exam has code editors) -->
+  {{PYODIDE_SCRIPT}}
+
+  <!-- App bundle -->
+  <script type="module" src="{{BASE}}assets/exam-page.js"></script>
+</body>
+</html>
