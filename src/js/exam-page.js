@@ -279,6 +279,11 @@ const warningModal = document.getElementById('warning-modal');
 const warningTitle = document.getElementById('warning-title');
 const warningMessage = document.getElementById('warning-message');
 
+/** Check whether any modal backdrop is currently visible. */
+function isAnyModalOpen() {
+  return document.querySelectorAll('.modal-backdrop:not(.hidden)').length > 0;
+}
+
 function showWarning(type) {
   if (type === 'copy') {
     warningTitle.textContent = '⚠️ Copy Not Allowed';
@@ -343,6 +348,35 @@ document.getElementById('email-confirm').addEventListener('click', () => {
 emailInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
     document.getElementById('email-confirm').click();
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/*  Global keyboard handler for modals                                 */
+/* ------------------------------------------------------------------ */
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' && e.key !== 'Enter') return;
+
+  /* Warning modal: Enter or Escape closes */
+  if (!warningModal.classList.contains('hidden')) {
+    warningModal.classList.add('hidden');
+    return;
+  }
+
+  /* Focus modal: Enter or Escape closes */
+  if (!focusModal.classList.contains('hidden')) {
+    focusModal.classList.add('hidden');
+    return;
+  }
+
+  /* Email modal: Escape closes without action */
+  if (!emailModal.classList.contains('hidden')) {
+    if (e.key === 'Escape') {
+      emailModal.classList.add('hidden');
+    }
+    /* Enter is already handled by the emailInput keydown listener */
+    return;
   }
 });
 
@@ -459,13 +493,15 @@ document.addEventListener('click', async (e) => {
 const focusModal = document.getElementById('focus-modal');
 
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
+  if (document.visibilityState === 'hidden' && !isAnyModalOpen()) {
     focusModal.classList.remove('hidden');
   }
 });
 
 window.addEventListener('blur', () => {
-  focusModal.classList.remove('hidden');
+  if (!isAnyModalOpen()) {
+    focusModal.classList.remove('hidden');
+  }
 });
 
 document.getElementById('focus-continue').addEventListener('click', () => {
