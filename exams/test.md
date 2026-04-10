@@ -27,9 +27,6 @@ Good luck, have fun!
 
 Please describe when they should be used.
 
-- sample
-- bullet list
-
 ---
 
 ## Tuples in Python are immutable. What does this mean?
