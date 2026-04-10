@@ -283,11 +283,11 @@ function showWarning(type) {
   if (type === 'copy') {
     warningTitle.textContent = '⚠️ Copy Not Allowed';
     warningMessage.textContent =
-      'You should not copy any content from this page.';
+      'There is no need to copy content from this page.';
   } else {
     warningTitle.textContent = '⚠️ Paste Not Allowed';
     warningMessage.textContent =
-      'You are not allowed to enter code from an external source.';
+      'You are not permitted to enter content from external sources.';
   }
   warningModal.classList.remove('hidden');
 }
