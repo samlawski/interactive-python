@@ -417,6 +417,7 @@ function downloadAnswers(email) {
   a.href = url;
   a.download = `${data.id}-${safeEmail}.md`;
   document.body.appendChild(a);
+  suppressFocusModal(5000); /* download dialog steals focus */
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
@@ -492,17 +493,50 @@ document.addEventListener('click', async (e) => {
 
 const focusModal = document.getElementById('focus-modal');
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden' && !isAnyModalOpen()) {
+/*
+ * Grace period: ignore blur/visibility events for a short window after
+ * actions that legitimately steal focus (e.g. file download dialogs,
+ * OS notifications). Also ignore brief flickers (< 2s) from OS-level
+ * overlays like Spotlight, notification banners, or autofill popups.
+ */
+let focusSuppressedUntil = 0;
+
+/** Suppress the focus-loss modal for the given duration (ms). */
+function suppressFocusModal(ms = 3000) {
+  focusSuppressedUntil = Date.now() + ms;
+}
+
+function shouldShowFocusModal() {
+  if (isAnyModalOpen()) return false;
+  if (Date.now() < focusSuppressedUntil) return false;
+  return true;
+}
+
+let focusBlurTimer = null;
+
+function scheduleFocusModal() {
+  /* Wait a short moment — if focus returns quickly it was likely an
+     OS-level overlay (Spotlight, notification, autofill) not a tab switch. */
+  clearTimeout(focusBlurTimer);
+  focusBlurTimer = setTimeout(() => {
+    /* Re-check: user may have returned in the meantime */
+    if (document.visibilityState === 'visible' && document.hasFocus()) return;
+    if (!shouldShowFocusModal()) return;
     focusModal.classList.remove('hidden');
+  }, 1500);
+}
+
+/* Cancel the timer when focus returns quickly */
+window.addEventListener('focus', () => clearTimeout(focusBlurTimer));
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    clearTimeout(focusBlurTimer);
+  } else {
+    scheduleFocusModal();
   }
 });
 
-window.addEventListener('blur', () => {
-  if (!isAnyModalOpen()) {
-    focusModal.classList.remove('hidden');
-  }
-});
+window.addEventListener('blur', () => scheduleFocusModal());
 
 document.getElementById('focus-continue').addEventListener('click', () => {
   focusModal.classList.add('hidden');
