@@ -457,5 +457,40 @@ document.addEventListener('click', async (e) => {
 /* ------------------------------------------------------------------ */
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register(data.basePath + 'sw.js').catch(() => {});
+  /* Collect all resource URLs the page depends on */
+  function getPageResourceUrls() {
+    const urls = new Set();
+    urls.add(location.href);
+    document.querySelectorAll('link[rel="stylesheet"][href]').forEach((el) =>
+      urls.add(el.href),
+    );
+    document.querySelectorAll('script[src]').forEach((el) =>
+      urls.add(el.src),
+    );
+    return [...urls];
+  }
+
+  /* On message from SW, send back our resource list for precaching */
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'CACHE_URLS') {
+      navigator.serviceWorker.controller?.postMessage({
+        type: 'CACHE_URLS',
+        urls: getPageResourceUrls(),
+      });
+    }
+  });
+
+  navigator.serviceWorker
+    .register(data.basePath + 'sw.js')
+    .then((reg) => {
+      /* If SW already active (repeat visit), proactively cache now */
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'CACHE_URLS',
+          urls: getPageResourceUrls(),
+        });
+      }
+      return reg;
+    })
+    .catch(() => {});
 }
