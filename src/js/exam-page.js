@@ -453,6 +453,26 @@ document.addEventListener('click', async (e) => {
 });
 
 /* ------------------------------------------------------------------ */
+/*  Focus-loss detection                                               */
+/* ------------------------------------------------------------------ */
+
+const focusModal = document.getElementById('focus-modal');
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    focusModal.classList.remove('hidden');
+  }
+});
+
+window.addEventListener('blur', () => {
+  focusModal.classList.remove('hidden');
+});
+
+document.getElementById('focus-continue').addEventListener('click', () => {
+  focusModal.classList.add('hidden');
+});
+
+/* ------------------------------------------------------------------ */
 /*  Service worker registration (offline support)                      */
 /* ------------------------------------------------------------------ */
 
