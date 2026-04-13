@@ -591,6 +591,49 @@ document.getElementById('focus-continue').addEventListener('click', () => {
 });
 
 /* ------------------------------------------------------------------ */
+/*  Online status indicator + connectivity ping                        */
+/* ------------------------------------------------------------------ */
+
+const onlineBorder = document.createElement('div');
+onlineBorder.className = 'online-border';
+document.body.appendChild(onlineBorder);
+
+const onlineIndicator = document.createElement('div');
+onlineIndicator.className = 'online-indicator';
+onlineIndicator.innerHTML = '<span class="status-dot"></span><span class="status-label">Offline</span>';
+document.body.appendChild(onlineIndicator);
+
+const statusLabel = onlineIndicator.querySelector('.status-label');
+
+function setOnlineStatus(online) {
+  if (online) {
+    onlineBorder.classList.add('visible');
+    onlineIndicator.className = 'online-indicator online';
+    statusLabel.textContent = 'You are online';
+  } else {
+    onlineBorder.classList.remove('visible');
+    onlineIndicator.className = 'online-indicator offline';
+    statusLabel.textContent = 'Offline';
+  }
+}
+
+async function checkConnectivity() {
+  try {
+    const resp = await fetch(window.location.href, {
+      method: 'HEAD',
+      cache: 'no-store',
+    });
+    setOnlineStatus(resp.ok);
+  } catch {
+    setOnlineStatus(false);
+  }
+}
+
+/* Initial check + periodic ping every 5 seconds */
+checkConnectivity();
+setInterval(checkConnectivity, 5000);
+
+/* ------------------------------------------------------------------ */
 /*  Service worker registration (offline support)                      */
 /* ------------------------------------------------------------------ */
 
