@@ -30,10 +30,32 @@ const terminals = {}; /* taskId → Terminal   */
 let pyodide = null;
 
 /* ------------------------------------------------------------------ */
-/*  Enhance rendered tasks                                             */
+/*  Shuffle task order, then enhance                                   */
 /* ------------------------------------------------------------------ */
 
-document.querySelectorAll('.exam-task').forEach((taskEl) => {
+/* Shuffle first — before creating editors — so DOM manipulation
+   cannot disrupt CodeMirror state or debounced localStorage saves. */
+const examContainer = document.getElementById('exam-tasks');
+const taskEls = Array.from(examContainer.querySelectorAll('.exam-task'));
+
+for (let i = taskEls.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [taskEls[i], taskEls[j]] = [taskEls[j], taskEls[i]];
+}
+
+/* Remove old separators, re-append tasks in shuffled order */
+examContainer.querySelectorAll('.task-separator').forEach((hr) => hr.remove());
+taskEls.forEach((task, i) => {
+  if (i > 0) {
+    const hr = document.createElement('hr');
+    hr.className = 'task-separator';
+    examContainer.appendChild(hr);
+  }
+  examContainer.appendChild(task);
+});
+
+/* Now enhance each task (editors, textareas, canvas code blocks) */
+taskEls.forEach((taskEl) => {
   const taskId = taskEl.dataset.taskId;
   const hasEditor = taskEl.dataset.hasEditor === 'true';
 
@@ -52,27 +74,6 @@ document.querySelectorAll('.exam-task').forEach((taskEl) => {
     buildTextarea(answerArea, taskId);
   }
 });
-
-/* Shuffle the displayed task order (download keeps original order) */
-{
-  const container = document.getElementById('exam-tasks');
-  const tasks = Array.from(container.querySelectorAll('.exam-task'));
-  /* Fisher-Yates shuffle */
-  for (let i = tasks.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [tasks[i], tasks[j]] = [tasks[j], tasks[i]];
-  }
-  /* Clear and re-append in shuffled order with separators */
-  container.innerHTML = '';
-  tasks.forEach((task, i) => {
-    if (i > 0) {
-      const hr = document.createElement('hr');
-      hr.className = 'task-separator';
-      container.appendChild(hr);
-    }
-    container.appendChild(task);
-  });
-}
 
 /* ------------------------------------------------------------------ */
 /*  Textarea builder                                                   */
