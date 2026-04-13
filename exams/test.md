@@ -6,11 +6,10 @@ You have 60 minutes to complete the exam and submit the assessment form before t
 
 For this assessment only need to have this page open.
 
-- 👉 For the duration of the exam **turn off your WiFi** and ensure not to leave or refresh this page.
-- 👉 Close all other tabs/windows and programs.
-- 👉 You are not permitted to use any other tools (such as chat programs, search engines, editors, or generative AI).
-- 👉 Only for the questions that specifically say so, you may use the code editor.
-- 👉 You may raise your hand to ask any questions!
+- 👉 For the duration of the exam **turn off your WiFi**.
+- 👉 Close all other tabs/windows and programs. Generative AI, chats, or other tools are **not permitted**.
+- 👉 You may use the code editor only for their designated questions.
+- 👉 Raise your hand to ask any questions!
 
 **When you're done**:
 
@@ -18,6 +17,8 @@ For this assessment only need to have this page open.
 - ✋ Raise your hand to indicate that you're done. 
 - Now you may turn on your WiFi again. 
 - Please **upload the downloaded file on Fuxam** as assessment submission for OS_01.
+
+_(👀 Please be aware that leaving this page or turning on the WiFi will show up in the logs.)_
 
 Good luck, have fun!
 
