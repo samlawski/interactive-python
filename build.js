@@ -460,6 +460,12 @@ async function main() {
     fs.copyFileSync(swSrc, path.join(DIST, 'sw.js'));
   }
 
+  /* Copy 404 page to dist root */
+  const notFoundSrc = path.join(__dirname, 'src', '404.html');
+  if (fs.existsSync(notFoundSrc)) {
+    fs.copyFileSync(notFoundSrc, path.join(DIST, '404.html'));
+  }
+
   console.log('  ✓ HTML pages generated');
 
   console.log(`\n✅ Done → ${path.relative(process.cwd(), DIST)}/\n`);
