@@ -55,6 +55,10 @@ taskEls.forEach((task, i) => {
 });
 
 /* Now enhance each task (editors, textareas, canvas code blocks) */
+const taskDataMap = Object.fromEntries(
+  data.tasks.map((t) => [t.id, t]),
+);
+
 taskEls.forEach((taskEl) => {
   const taskId = taskEl.dataset.taskId;
   const hasEditor = taskEl.dataset.hasEditor === 'true';
@@ -69,7 +73,8 @@ taskEls.forEach((taskEl) => {
   const answerArea = taskEl.querySelector('.task-answer-area');
 
   if (hasEditor) {
-    buildEditorTerminal(answerArea, taskId);
+    const starterCode = (taskDataMap[taskId] && taskDataMap[taskId].starterCode) || '';
+    buildEditorTerminal(answerArea, taskId, starterCode);
   } else {
     buildTextarea(answerArea, taskId);
   }
@@ -168,7 +173,7 @@ function autoExpand(textarea) {
 /*  Editor + Terminal builder                                          */
 /* ------------------------------------------------------------------ */
 
-function buildEditorTerminal(container, taskId) {
+function buildEditorTerminal(container, taskId, starterCode) {
   /* Editor section */
   const editorSection = document.createElement('div');
   editorSection.className = 'editor-section card exam-editor';
@@ -209,7 +214,7 @@ function buildEditorTerminal(container, taskId) {
 
   /* Create CodeMirror editor */
   const savedCode =
-    localStorage.getItem(`exam-${data.id}-editor-${taskId}`) || '';
+    localStorage.getItem(`exam-${data.id}-editor-${taskId}`) || starterCode || '';
 
   let saveTimer = null;
   const editor = createEditor(editorDiv, savedCode, (code) => {

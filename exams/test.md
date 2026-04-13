@@ -98,16 +98,21 @@ The function should divide x by y and return the result. If y is zero it should 
 
 The function should get a list of students as input (you can assume the format of the example below). It should add a key-value pair representing their email to each student. The key should be "email", the value should be `<first_name>.<family_name>@code.berlin`
 
-Here is an example data set to start with: 
+For this task, there is already a dictionary to get you started:
 
+
+[[PYTHON-EDITOR]]
 ```python
 students = [
   {"first_name": "Frank", "family_name": "Trollmann"},
   {"first_name": "Fabio", "family_name": "Fracassi"}
 ]
-```
 
-[[PYTHON-EDITOR]]
+# Your code ...
+
+
+```
+[[/PYTHON-EDITOR]]
 
 ---
 

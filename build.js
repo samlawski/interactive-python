@@ -197,8 +197,20 @@ function readExams() {
           : trimmed;
 
         const hasEditor = contentMd.includes('[[PYTHON-EDITOR]]');
+
+        /* Extract optional starter code from [[PYTHON-EDITOR]]```python...```[[/PYTHON-EDITOR]] */
+        let starterCode = '';
+        const starterMatch = contentMd.match(
+          /\[\[PYTHON-EDITOR\]\]\s*```python\s*\n([\s\S]*?)```\s*\[\[\/PYTHON-EDITOR\]\]/,
+        );
+        if (starterMatch) {
+          starterCode = starterMatch[1].trimEnd();
+        }
+
         const cleanedContentMd = contentMd
+          .replace(/\[\[PYTHON-EDITOR\]\]\s*```python\s*\n[\s\S]*?```\s*\[\[\/PYTHON-EDITOR\]\]/g, '')
           .replace(/\[\[PYTHON-EDITOR\]\]\s*/g, '')
+          .replace(/\[\[\/PYTHON-EDITOR\]\]\s*/g, '')
           .trim();
 
         return {
@@ -206,6 +218,7 @@ function readExams() {
           title: taskTitle,
           contentHtml: cleanedContentMd ? renderMarkdown(cleanedContentMd) : '',
           hasEditor,
+          starterCode,
         };
       }).filter(Boolean);
 
@@ -322,6 +335,7 @@ function generateExamPages(exams) {
         id: t.id,
         title: t.title,
         hasEditor: t.hasEditor,
+        starterCode: t.starterCode || '',
       })),
       basePath,
     });
