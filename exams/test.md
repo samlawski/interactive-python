@@ -86,7 +86,7 @@ except Exception:
 
 ---
 
-## Please define a function "divide_by_none_zero(x,y)"
+## Please define a function "divide_by_non_zero(x,y)"
 
 The function should divide x by y and return the result. If y is zero it should return the string "Nope" instead.
 
