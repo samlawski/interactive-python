@@ -116,8 +116,17 @@ if (taskEls.length >= 2) {
   });
 
   const saved = parseInt(localStorage.getItem(ACTIVE_TASK_KEY), 10);
-  const start = saved >= 0 && saved < taskEls.length ? saved : 0;
-  goToTask(start);
+  const hasVisited = saved >= 0 && saved < taskEls.length;
+  const start = hasVisited ? saved : 0;
+
+  for (let i = 0; i < taskEls.length; i++) {
+    taskEls[i].classList.toggle('task-focused', i === start);
+  }
+  localStorage.setItem(ACTIVE_TASK_KEY, start);
+
+  if (hasVisited) {
+    taskEls[start].scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 }
 
 /* ------------------------------------------------------------------ */
