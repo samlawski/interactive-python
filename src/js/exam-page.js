@@ -29,6 +29,25 @@ const terminals = {}; /* taskId → Terminal   */
 let pyodide = null;
 
 /* ------------------------------------------------------------------ */
+/*  Event log                                                          */
+/* ------------------------------------------------------------------ */
+
+const eventLog = [];
+
+function logEvent(label) {
+  eventLog.push({ time: new Date().toISOString(), label });
+}
+
+logEvent('Page loaded');
+
+let contentStartedLogged = false;
+function logContentStart() {
+  if (contentStartedLogged) return;
+  contentStartedLogged = true;
+  logEvent('First content interaction');
+}
+
+/* ------------------------------------------------------------------ */
 /*  Shuffle task order, then enhance                                   */
 /* ------------------------------------------------------------------ */
 
@@ -83,7 +102,13 @@ taskEls.forEach((taskEl) => {
 /*  Spotlight — button-based task navigation                           */
 /* ------------------------------------------------------------------ */
 
+let currentTaskIndex = 0;
+
 function goToTask(index) {
+  const fromId = taskEls[currentTaskIndex].dataset.taskId;
+  const toId = taskEls[index].dataset.taskId;
+  logEvent(`Navigated from task ${fromId} to ${toId}`);
+  currentTaskIndex = index;
   for (let i = 0; i < taskEls.length; i++) {
     taskEls[i].classList.toggle('task-focused', i === index);
   }
@@ -138,6 +163,7 @@ function buildTextarea(container, taskId) {
 
   /* Auto-save on input */
   textarea.addEventListener('input', () => {
+    logContentStart();
     localStorage.setItem(`exam-${data.id}-${taskId}`, textarea.value);
     autoExpand(textarea);
   });
@@ -206,6 +232,7 @@ function buildEditorTerminal(container, taskId, starterCode) {
 
   let saveTimer = null;
   const editor = createEditor(editorDiv, savedCode, (code) => {
+    logContentStart();
     clearTimeout(saveTimer);
     saveTimer = setTimeout(
       () => localStorage.setItem(`exam-${data.id}-editor-${taskId}`, code),
@@ -456,6 +483,16 @@ function downloadAnswers(email) {
     md += '---\n\n';
   }
 
+  logEvent('Content downloaded');
+
+  md += '## Activity Log\n\n';
+  md += '| # | Timestamp | Event |\n';
+  md += '|---|-----------|-------|\n';
+  eventLog.forEach((entry, i) => {
+    md += `| ${i + 1} | ${entry.time} | ${entry.label} |\n`;
+  });
+  md += '\n';
+
   /* Sanitise email for filename */
   const safeEmail = email.replace(/[^a-zA-Z0-9@._-]/g, '_');
 
@@ -575,16 +612,24 @@ function scheduleFocusModal() {
 }
 
 /* Cancel the timer when focus returns quickly */
-window.addEventListener('focus', () => clearTimeout(focusBlurTimer));
+window.addEventListener('focus', () => {
+  clearTimeout(focusBlurTimer);
+  logEvent('Page regained focus');
+});
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     clearTimeout(focusBlurTimer);
+    logEvent('Page regained focus');
   } else {
+    logEvent('👀 Page lost focus');
     scheduleFocusModal();
   }
 });
 
-window.addEventListener('blur', () => scheduleFocusModal());
+window.addEventListener('blur', () => {
+  logEvent('👀 Page lost focus');
+  scheduleFocusModal();
+});
 
 document.getElementById('focus-continue').addEventListener('click', () => {
   focusModal.classList.add('hidden');
@@ -605,7 +650,15 @@ document.body.appendChild(onlineIndicator);
 
 const statusLabel = onlineIndicator.querySelector('.status-label');
 
+let lastOnlineState = null;
+
 function setOnlineStatus(online) {
+  if (lastOnlineState !== online) {
+    if (lastOnlineState !== null) {
+      logEvent(online ? 'Page went online' : '🔌 Page went offline');
+    }
+    lastOnlineState = online;
+  }
   if (online) {
     onlineBorder.classList.add('visible');
     onlineIndicator.className = 'online-indicator online';
