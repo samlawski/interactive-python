@@ -76,6 +76,73 @@ taskEls.forEach((taskEl) => {
 });
 
 /* ------------------------------------------------------------------ */
+/*  Spotlight scroll — dim/blur all but the most-visible task card     */
+/* ------------------------------------------------------------------ */
+
+(function initSpotlight() {
+  if (taskEls.length < 2) return;          /* nothing to spotlight */
+
+  examContainer.classList.add('spotlight-active');
+
+  /*
+   * Track each card's visible ratio. The card with the highest ratio
+   * (and above a minimum threshold) becomes the focused one.
+   * For the first and last card we use a lower threshold so they
+   * are guaranteed to become focused when scrolled into view.
+   */
+  const ratios = new Map();                /* element → intersectionRatio */
+  const THRESHOLD_STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
+
+  function updateFocus() {
+    let best = null;
+    let bestRatio = 0;
+
+    for (const el of taskEls) {
+      const r = ratios.get(el) || 0;
+      if (r > bestRatio) {
+        bestRatio = r;
+        best = el;
+      }
+    }
+
+    /* Require a minimum visible portion, but be lenient for
+       first/last cards which may never reach high ratios. */
+    const minRatio = (best === taskEls[0] || best === taskEls[taskEls.length - 1])
+      ? 0.05
+      : 0.1;
+
+    if (!best || bestRatio < minRatio) return;
+
+    for (const el of taskEls) {
+      el.classList.toggle('task-focused', el === best);
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        ratios.set(entry.target, entry.intersectionRatio);
+      }
+      updateFocus();
+    },
+    {
+      /* Use a vertically-centred strip as the root margin so that
+         cards near the viewport centre win over those at the edges.
+         The negative top/bottom margins shrink the effective area. */
+      rootMargin: '-15% 0px -15% 0px',
+      threshold: THRESHOLD_STEPS,
+    },
+  );
+
+  for (const el of taskEls) {
+    observer.observe(el);
+  }
+
+  /* Focus the first card immediately so page loads with it visible */
+  taskEls[0].classList.add('task-focused');
+})();
+
+/* ------------------------------------------------------------------ */
 /*  Textarea builder                                                   */
 /* ------------------------------------------------------------------ */
 

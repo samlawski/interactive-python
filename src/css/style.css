@@ -701,6 +701,35 @@ details[open] summary {
   min-width: 220px;
 }
 
+/* --- Exam Spotlight Scroll ---------------------------------------- */
+
+/*
+ * When the spotlight is active (.spotlight-active on #exam-tasks),
+ * every task card transitions between focused and dimmed states.
+ * The instructions card and download buttons are never affected.
+ */
+
+.spotlight-active .exam-task {
+  transition: opacity 0.45s ease, filter 0.45s ease;
+}
+
+.spotlight-active .exam-task:not(.task-focused) {
+  opacity: 0.25;
+  filter: blur(3px);
+  pointer-events: auto;          /* keep interactive so user can click to scroll */
+}
+
+.spotlight-active .exam-task.task-focused {
+  opacity: 1;
+  filter: none;
+}
+
+/* Separators between tasks also dim */
+.spotlight-active .task-separator {
+  transition: opacity 0.45s ease;
+  opacity: 0.15;
+}
+
 /* --- Responsive --------------------------------------------------- */
 
 @media (max-width: 640px) {
