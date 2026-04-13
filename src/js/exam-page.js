@@ -6,7 +6,6 @@
    - Code blocks rendered as canvas images (unselectable)
    - Independent editor/terminal pairs per task
    - Download answers as Markdown
-   - localStorage persistence
    - Copy/paste protection
    - Service worker registration for offline support
    =================================================================== */
@@ -84,13 +83,10 @@ taskEls.forEach((taskEl) => {
 /*  Spotlight — button-based task navigation                           */
 /* ------------------------------------------------------------------ */
 
-const ACTIVE_TASK_KEY = `exam-${data.id}-active-task`;
-
 function goToTask(index) {
   for (let i = 0; i < taskEls.length; i++) {
     taskEls[i].classList.toggle('task-focused', i === index);
   }
-  localStorage.setItem(ACTIVE_TASK_KEY, index);
   taskEls[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
@@ -120,17 +116,9 @@ if (taskEls.length >= 2) {
     el.appendChild(nav);
   });
 
-  const saved = parseInt(localStorage.getItem(ACTIVE_TASK_KEY), 10);
-  const hasVisited = saved >= 0 && saved < taskEls.length;
-  const start = hasVisited ? saved : 0;
-
+  /* Always start at the first task */
   for (let i = 0; i < taskEls.length; i++) {
-    taskEls[i].classList.toggle('task-focused', i === start);
-  }
-  localStorage.setItem(ACTIVE_TASK_KEY, start);
-
-  if (hasVisited) {
-    taskEls[start].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    taskEls[i].classList.toggle('task-focused', i === 0);
   }
 }
 
