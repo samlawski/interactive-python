@@ -701,22 +701,15 @@ details[open] summary {
   min-width: 220px;
 }
 
-/* --- Exam Spotlight Scroll ---------------------------------------- */
-
-/*
- * When the spotlight is active (.spotlight-active on #exam-tasks),
- * every task card transitions between focused and dimmed states.
- * The instructions card and download buttons are never affected.
- */
+/* --- Exam Spotlight Navigation ------------------------------------- */
 
 .spotlight-active .exam-task {
   transition: opacity 0.45s ease, filter 0.45s ease;
 }
 
 .spotlight-active .exam-task:not(.task-focused) {
-  opacity: 0.25;
+  opacity: 0.2;
   filter: blur(3px);
-  pointer-events: auto;          /* keep interactive so user can click to scroll */
 }
 
 .spotlight-active .exam-task.task-focused {
@@ -724,10 +717,39 @@ details[open] summary {
   filter: none;
 }
 
-/* Separators between tasks also dim */
 .spotlight-active .task-separator {
   transition: opacity 0.45s ease;
   opacity: 0.15;
+}
+
+.task-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Push a lone "Next" button to the right */
+.task-nav .btn-nav:only-child {
+  margin-left: auto;
+}
+
+.btn-nav {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btn-nav:hover {
+  background: var(--border);
+  border-color: var(--primary);
 }
 
 /* --- Responsive --------------------------------------------------- */
