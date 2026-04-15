@@ -33,10 +33,12 @@ let pyodide = null;
 /*  Event log                                                          */
 /* ------------------------------------------------------------------ */
 
-const eventLog = [];
+const LOG_KEY = `exam-${data.id}-log`;
+const eventLog = JSON.parse(localStorage.getItem(LOG_KEY) || '[]');
 
 function logEvent(label) {
   eventLog.push({ time: new Date().toISOString(), label });
+  localStorage.setItem(LOG_KEY, JSON.stringify(eventLog));
 }
 
 logEvent('Page loaded');
