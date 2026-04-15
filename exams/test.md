@@ -4,12 +4,10 @@ Welcome!
 
 You have 60 minutes to complete the exam and submit the assessment form before the time runs out.
 
-For this assessment only need to have this page open.
-
 - 👉 For the duration of the exam **turn off your WiFi**.
-- 👉 Close all other tabs/windows and programs. Generative AI, chats, or other tools are **not permitted**.
-- 👉 Some questions come with a code editor. You may only use it for that question. 
-- 👉 Raise your hand to ask any questions!
+- 👉 You only need this page open. **Close all other tabs/windows and programs.** Generative AI, chats, or other tools are **not permitted**.
+- 👉 Some questions come with a code editor. You may **only** use it for that question. 
+- 👉 Feel free to raise your hand to ask any questions! ✋
 
 **When you're done**:
 
