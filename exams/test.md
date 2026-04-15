@@ -8,7 +8,7 @@ For this assessment only need to have this page open.
 
 - 👉 For the duration of the exam **turn off your WiFi**.
 - 👉 Close all other tabs/windows and programs. Generative AI, chats, or other tools are **not permitted**.
-- 👉 You may use the code editor only for their designated questions.
+- 👉 Some questions come with a code editor. You may only use it for that question. 
 - 👉 Raise your hand to ask any questions!
 
 **When you're done**:
