@@ -606,27 +606,58 @@ function shouldShowFocusModal() {
 }
 
 let focusBlurTimer = null;
+let focusTimerInterval = null;
+let focusTimerStart = 0;
+const focusTimerEl = document.getElementById('focus-timer');
+
+function formatElapsed(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}:${String(sec).padStart(2, '0')}`;
+}
+
+function startFocusTimer() {
+  stopFocusTimer();
+  focusTimerStart = Date.now();
+  focusTimerEl.textContent = '0:00';
+  focusTimerInterval = setInterval(() => {
+    focusTimerEl.textContent = formatElapsed(Date.now() - focusTimerStart);
+  }, 1000);
+}
+
+function stopFocusTimer() {
+  clearInterval(focusTimerInterval);
+  focusTimerInterval = null;
+  const elapsed = focusTimerStart ? Date.now() - focusTimerStart : 0;
+  focusTimerStart = 0;
+  return elapsed;
+}
 
 function scheduleFocusModal() {
   /* Wait a short moment — if focus returns quickly it was likely an
      OS-level overlay (Spotlight, notification, autofill) not a tab switch. */
   clearTimeout(focusBlurTimer);
+  startFocusTimer();
   focusBlurTimer = setTimeout(() => {
     /* Re-check: user may have returned in the meantime */
     if (document.visibilityState === 'visible' && document.hasFocus()) return;
     if (!shouldShowFocusModal()) return;
     focusModal.classList.remove('hidden');
-  }, 1500);
+  }, 2500);
 }
 
 /* Cancel the timer when focus returns quickly */
 window.addEventListener('focus', () => {
   clearTimeout(focusBlurTimer);
+  if (!focusModal.classList.contains('hidden')) return; /* modal already showing */
+  stopFocusTimer();
   logEvent('Page regained focus');
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     clearTimeout(focusBlurTimer);
+    if (focusModal.classList.contains('hidden')) stopFocusTimer();
     logEvent('Page regained focus');
   } else {
     logEvent('👀 Page lost focus');
@@ -640,7 +671,9 @@ window.addEventListener('blur', () => {
 });
 
 document.getElementById('focus-continue').addEventListener('click', () => {
+  const elapsed = stopFocusTimer();
   focusModal.classList.add('hidden');
+  logEvent(`Focus modal dismissed after ${formatElapsed(elapsed)}`);
 });
 
 /* ------------------------------------------------------------------ */
@@ -663,7 +696,7 @@ let lastOnlineState = null;
 function setOnlineStatus(online) {
   if (lastOnlineState !== online) {
     if (lastOnlineState !== null) {
-      logEvent(online ? 'Page went online' : '🔌 Page went offline');
+      logEvent(online ? '🔌 Page went online' : 'Page went offline');
     }
     lastOnlineState = online;
   }

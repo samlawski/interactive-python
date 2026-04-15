@@ -601,6 +601,14 @@ details[open] summary {
   justify-content: center;
 }
 
+.focus-timer {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  margin-bottom: 1.25rem;
+}
+
 .modal-actions .btn {
   min-width: 90px;
 }

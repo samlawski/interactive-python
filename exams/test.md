@@ -24,19 +24,19 @@ Good luck, have fun!
 
 ---
 
-## Please explain the difference between the "print" statement and  the "return" statement.
+## Please explain the difference between the "print" statement and  the "return" statement. (5 points)
 
 Please describe when they should be used.
 
 ---
 
-## Tuples in Python are immutable. What does this mean?
+## Tuples in Python are immutable. What does this mean? (5 points)
 
 Please describe what immutability means and what one may want to use an immutable data structure for. 
 
 ---
 
-## What will be printed in the command line after the following program is executed?
+## What will be printed in the command line after the following program is executed? (5 points)
 
 ```python
 a = "n"
@@ -51,7 +51,7 @@ print(a, b + c)
 
 ---
 
-## What value does d have after execution the following program?
+## What value does d have after execution the following program? (5 points)
 
 ```python
 a = 8
@@ -65,7 +65,7 @@ d = float(c + c + c)
 
 ---
 
-## What will be printed in the command line after the following program is executed?
+## What will be printed in the command line after the following program is executed? (5 points)
 
 It is probably a good idea to simulate the control flow of the code in your head and keep track of variables and errors to find out which print statements are called in which order.
 
@@ -87,7 +87,7 @@ except Exception:
 
 ---
 
-## Please define a function "divide_by_non_zero(x,y)"
+## Please define a function "divide_by_non_zero(x,y)" (10 points)
 
 The function should divide x by y and return the result. If y is zero it should return the string "Nope" instead.
 
@@ -95,7 +95,7 @@ The function should divide x by y and return the result. If y is zero it should 
 
 ---
 
-## Please define a function "add_email(students)"
+## Please define a function "add_email(students)" (10 points)
 
 The function should get a list of students as input (you can assume the format of the example below). It should add a key-value pair representing their email to each student. The key should be "email", the value should be `<first_name>.<family_name>@code.berlin`
 
@@ -117,7 +117,7 @@ students = [
 
 ---
 
-## Please write a program that asks the user "Are we there yet?" until they answer "Yes".
+## Please write a program that asks the user "Are we there yet?" until they answer "Yes". (10 points)
 
 "Asking" means printing the question to the command line. The answer should be received via the input statement.
 
