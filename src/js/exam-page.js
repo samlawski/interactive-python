@@ -279,7 +279,7 @@ function renderCodeAsCanvas(preElement) {
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
 
-  const fontSize = 14;
+  const fontSize = 16;
   const lineHeight = fontSize * 1.6;
   const padding = 16;
   const font = `${fontSize}px 'Courier New', Courier, monospace`;
