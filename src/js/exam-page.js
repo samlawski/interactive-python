@@ -159,6 +159,10 @@ function buildTextarea(container, taskId) {
   textarea.className = 'exam-textarea';
   textarea.rows = 3;
   textarea.placeholder = 'Enter your answer here…';
+  textarea.autocomplete = 'off';
+  textarea.autocapitalize = 'off';
+  textarea.setAttribute('autocorrect', 'off');
+  textarea.spellcheck = false;
 
   /* Restore from localStorage */
   const saved = localStorage.getItem(`exam-${data.id}-${taskId}`);
