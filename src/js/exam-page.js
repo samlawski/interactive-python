@@ -626,7 +626,7 @@ function formatElapsed(ms) {
 }
 
 function startFocusTimer() {
-  stopFocusTimer();
+  if (focusTimerInterval) return; /* already running */
   focusTimerStart = Date.now();
   focusTimerEl.textContent = '0:00';
   focusTimerInterval = setInterval(() => {
@@ -639,33 +639,36 @@ function stopFocusTimer() {
   focusTimerInterval = null;
   const elapsed = focusTimerStart ? Date.now() - focusTimerStart : 0;
   focusTimerStart = 0;
+  focusTimerEl.textContent = '0:00';
   return elapsed;
+}
+
+function showFocusModal() {
+  focusModal.classList.remove('hidden');
+  startFocusTimer();
 }
 
 function scheduleFocusModal() {
   /* Wait a short moment — if focus returns quickly it was likely an
      OS-level overlay (Spotlight, notification, autofill) not a tab switch. */
+  if (!focusModal.classList.contains('hidden')) return; /* modal already open */
   clearTimeout(focusBlurTimer);
-  startFocusTimer();
   focusBlurTimer = setTimeout(() => {
     /* Re-check: user may have returned in the meantime */
     if (document.visibilityState === 'visible' && document.hasFocus()) return;
     if (!shouldShowFocusModal()) return;
-    focusModal.classList.remove('hidden');
+    showFocusModal();
   }, 2500);
 }
 
-/* Cancel the timer when focus returns quickly */
+/* Cancel the pending timer when focus returns quickly */
 window.addEventListener('focus', () => {
   clearTimeout(focusBlurTimer);
-  if (!focusModal.classList.contains('hidden')) return; /* modal already showing */
-  stopFocusTimer();
   logEvent('Page regained focus');
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     clearTimeout(focusBlurTimer);
-    if (focusModal.classList.contains('hidden')) stopFocusTimer();
     logEvent('Page regained focus');
   } else {
     logEvent('👀 Page lost focus');
