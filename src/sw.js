@@ -107,6 +107,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  /* Never intercept connectivity-check pings — let them go to the network
+     so the page can accurately detect whether WiFi is actually up. */
+  if (url.searchParams.has('_ping')) return;
+
   const isPyodide = url.pathname.includes('/pyodide/');
 
   if (isPyodide) {

@@ -708,7 +708,10 @@ function setOnlineStatus(online) {
 
 async function checkConnectivity() {
   try {
-    const resp = await fetch(window.location.href, {
+    /* Append a unique _ping param so the service worker never serves
+       this request from cache — guaranteeing a real network round-trip. */
+    const pingUrl = `${window.location.href.split('?')[0]}?_ping=${Date.now()}`;
+    const resp = await fetch(pingUrl, {
       method: 'HEAD',
       cache: 'no-store',
     });
