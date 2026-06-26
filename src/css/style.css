@@ -42,6 +42,7 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -703,29 +704,45 @@ details[open] summary {
 .exam-download {
   margin: 1.5rem 0;
   text-align: center;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .exam-download .btn {
   min-width: 220px;
 }
 
+.btn-start-exam {
+  background: var(--success);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.65rem 1.5rem;
+  text-decoration: none;
+}
+
 /* --- Exam Spotlight Navigation ------------------------------------- */
 
-.spotlight-active .exam-task {
+#exam-tasks.has-spotlight .exam-task {
   transition: opacity 0.45s ease, filter 0.45s ease;
 }
 
-.spotlight-active .exam-task:not(.task-focused) {
+/* No task targeted (not yet started): blur everything */
+#exam-tasks.has-spotlight:not(:has(.exam-task:target)) .exam-task,
+/* Task targeted: blur the other tasks */
+#exam-tasks.has-spotlight:has(.exam-task:target) .exam-task:not(:target) {
   opacity: 0.2;
   filter: blur(3px);
 }
 
-.spotlight-active .exam-task.task-focused {
+#exam-tasks.has-spotlight .exam-task:target {
   opacity: 1;
   filter: none;
 }
 
-.spotlight-active .task-separator {
+#exam-tasks.has-spotlight:has(.exam-task:target) .task-separator {
   transition: opacity 0.45s ease;
   opacity: 0.15;
 }
@@ -753,11 +770,13 @@ details[open] summary {
   border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
+  text-decoration: none;
 }
 
 .btn-nav:hover {
   background: var(--border);
   border-color: var(--primary);
+  text-decoration: none;
 }
 
 /* --- Online status indicator --------------------------------------- */

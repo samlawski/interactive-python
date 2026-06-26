@@ -214,8 +214,7 @@ function readExams() {
           .trim();
 
         return {
-          id: `task-${index}`,
-          title: taskTitle,
+          id: `task-${index + 1}`,          title: taskTitle,
           contentHtml: cleanedContentMd ? renderMarkdown(cleanedContentMd) : '',
           hasEditor,
           starterCode,
@@ -319,7 +318,7 @@ function generateExamPages(exams) {
     const tasksHtml = exam.tasks
       .map(
         (task) =>
-          `<section class="exam-task card" data-task-id="${task.id}" data-has-editor="${task.hasEditor}">
+          `<section id="${task.id}" class="exam-task card" data-task-id="${task.id}" data-has-editor="${task.hasEditor}">
         <h2>${escapeHtml(task.title)}</h2>
         ${task.contentHtml ? `<div class="task-content">${task.contentHtml}</div>` : ''}
         <div class="task-answer-area"></div>

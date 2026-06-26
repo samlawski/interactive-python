@@ -84,53 +84,55 @@ taskEls.forEach((taskEl) => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Spotlight — button-based task navigation                           */
+/*  Spotlight — hash-based task navigation                             */
 /* ------------------------------------------------------------------ */
 
-let currentTaskIndex = 0;
-
-function goToTask(index) {
-  const fromId = taskEls[currentTaskIndex].dataset.taskId;
-  const toId = taskEls[index].dataset.taskId;
-  logEvent(`Navigated from task ${fromId} to ${toId}`);
-  currentTaskIndex = index;
-  for (let i = 0; i < taskEls.length; i++) {
-    taskEls[i].classList.toggle('task-focused', i === index);
-  }
-  taskEls[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
 if (taskEls.length >= 2) {
-  examContainer.classList.add('spotlight-active');
+  examContainer.classList.add('has-spotlight');
+
+  /* Insert Start button before the top download button */
+  const startBtn = document.createElement('a');
+  startBtn.className = 'btn btn-start-exam';
+  startBtn.textContent = '▶ Start Exam';
+  startBtn.href = '#' + taskEls[0].id;
+  const topDownloadDiv = document.getElementById('download-top-btn').parentElement;
+  topDownloadDiv.insertBefore(startBtn, topDownloadDiv.firstChild);
 
   taskEls.forEach((el, i) => {
     const nav = document.createElement('div');
     nav.className = 'task-nav';
 
     if (i > 0) {
-      const prev = document.createElement('button');
+      const prev = document.createElement('a');
       prev.className = 'btn btn-nav';
       prev.textContent = '← Previous Task';
-      prev.addEventListener('click', () => goToTask(i - 1));
+      prev.href = '#' + taskEls[i - 1].id;
       nav.appendChild(prev);
     }
 
     if (i < taskEls.length - 1) {
-      const next = document.createElement('button');
+      const next = document.createElement('a');
       next.className = 'btn btn-nav';
       next.textContent = 'Next Task →';
-      next.addEventListener('click', () => goToTask(i + 1));
+      next.href = '#' + taskEls[i + 1].id;
       nav.appendChild(next);
     }
 
     el.appendChild(nav);
   });
 
-  /* Always start at the first task */
-  for (let i = 0; i < taskEls.length; i++) {
-    taskEls[i].classList.toggle('task-focused', i === 0);
+/* Update start button label based on whether exam has been started */
+  function updateStartBtn() {
+    startBtn.textContent = location.hash ? '↑ Start at the top' : '▶ Start Exam';
   }
+  updateStartBtn();
+  window.addEventListener('hashchange', updateStartBtn);
 }
+
+/* Log hash-based navigation */
+window.addEventListener('hashchange', () => {
+  logEvent(`Navigated to task ${location.hash}`);
+});
 
 /* ------------------------------------------------------------------ */
 /*  Textarea builder                                                   */
