@@ -67,8 +67,13 @@ const runBtn = document.getElementById('run-btn');
 /* ▶ Run */
 runBtn.addEventListener('click', async () => {
   runBtn.disabled = true;
-  await runCode(pyodide, getCode(editor), terminal);
-  runBtn.disabled = false;
+  try {
+    await runCode(pyodide, getCode(editor), terminal);
+  } catch (err) {
+    terminal.writeError('\n' + (err.message || String(err)) + '\n');
+  } finally {
+    runBtn.disabled = false;
+  }
 });
 
 /* Clear terminal */

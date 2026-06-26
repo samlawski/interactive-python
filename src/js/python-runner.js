@@ -141,7 +141,7 @@ export async function runTests(pyodide, solutionCode, testCode, terminal) {
  */
 function _clearUserGlobals(pyodide) {
   pyodide.runPython(`
-for _name in list(globals()):
+for _name in _builtins.list(globals()):
     if not _name.startswith('_'):
         del globals()[_name]
 `);

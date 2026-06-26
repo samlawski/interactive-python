@@ -105,18 +105,28 @@ function setRunning(busy) {
 /* ▶ Run */
 runBtn.addEventListener('click', async () => {
   setRunning(true);
-  await runCode(pyodide, getCode(editor), terminal);
-  setRunning(false);
+  try {
+    await runCode(pyodide, getCode(editor), terminal);
+  } catch (err) {
+    terminal.writeError('\n' + (err.message || String(err)) + '\n');
+  } finally {
+    setRunning(false);
+  }
 });
 
 /* 🧪 Test */
 testBtn.addEventListener('click', async () => {
   if (!data.testCode) return;
   setRunning(true);
-  terminal.clear();
-  terminal.writeInfo('Running tests…\n\n');
-  await runTests(pyodide, getCode(editor), data.testCode, terminal);
-  setRunning(false);
+  try {
+    terminal.clear();
+    terminal.writeInfo('Running tests…\n\n');
+    await runTests(pyodide, getCode(editor), data.testCode, terminal);
+  } catch (err) {
+    terminal.writeError('\n' + (err.message || String(err)) + '\n');
+  } finally {
+    setRunning(false);
+  }
 });
 
 /* Clear terminal */
