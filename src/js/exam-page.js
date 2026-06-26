@@ -735,6 +735,15 @@ if ('serviceWorker' in navigator) {
     document.querySelectorAll('script[src]').forEach((el) =>
       urls.add(el.src),
     );
+    /* Pyodide fetches these internally — they would miss the SW on the
+       very first visit (race condition), so explicitly request caching.
+       SW install-time precaching also covers this, but belt-and-suspenders. */
+    if (hasEditors) {
+      const pyBase = new URL(data.basePath + 'pyodide/', location.href).href;
+      ['pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'].forEach(
+        (f) => urls.add(pyBase + f),
+      );
+    }
     return [...urls];
   }
 
