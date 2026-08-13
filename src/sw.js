@@ -124,7 +124,10 @@ self.addEventListener('fetch', (event) => {
             caches.open(CACHE).then((cache) => cache.put(request, res.clone()));
           }
           return res;
-        }),
+        }).catch(() => new Response('Offline', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain' },
+        })),
       ),
     );
   } else {
