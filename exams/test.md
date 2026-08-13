@@ -1,6 +1,6 @@
 # OS_01 Exam
 
-Welcome!
+Welcome! 
 
 You have 60 minutes to complete the exam and submit the assessment form before the time runs out.
 
