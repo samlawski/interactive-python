@@ -730,6 +730,24 @@ setInterval(checkConnectivity, 5000);
 /* ------------------------------------------------------------------ */
 
 if ('serviceWorker' in navigator) {
+  /* True on the very first visit: no SW controls this page yet, so none
+     of its requests — including ES-module chunks like python-runner.js,
+     which never appear as a <script> element and are invisible to
+     getPageResourceUrls() below — are intercepted or cached by the fetch
+     handler. Once the newly-installed SW activates and claims this page,
+     force a single reload so the reload (and everything it fetches) goes
+     through the SW's fetch handler and gets cached, leaving the page
+     fully usable offline right away. Only do this on the very first
+     visit — later SW updates must never force a reload mid-exam. */
+  const isFirstVisit = !navigator.serviceWorker.controller;
+  if (isFirstVisit) {
+    navigator.serviceWorker.addEventListener(
+      'controllerchange',
+      () => window.location.reload(),
+      { once: true },
+    );
+  }
+
   /* Collect all resource URLs the page depends on */
   function getPageResourceUrls() {
     const urls = new Set();
