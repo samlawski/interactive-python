@@ -118,7 +118,7 @@ if (taskEls.length >= 2) {
       nav.appendChild(next);
     }
 
-    el.appendChild(nav);
+    el.querySelector('.exam-task-body').appendChild(nav);
   });
 
 /* Update start button label based on whether exam has been started */

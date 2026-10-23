@@ -254,12 +254,28 @@ function resolveLinkUrl(url, basePath) {
   return basePath + url.replace(/^\.\//, '');
 }
 
+/** Inline stroke icons for link boxes (currentColor, no external files). */
+const LINK_ICONS = {
+  external: '<path d="M7 17L17 7M9 7h8v8"/>',
+  internal: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  chevron: '<path d="M9 6l6 6-6 6"/>',
+};
+
+/** Wrap an icon's path in an SVG element. */
+function linkIconSvg(name, size) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LINK_ICONS[name]}</svg>`;
+}
+
 /** Render one clickable link box (used by link grids on pages). */
 function linkBoxHtml({ titleHtml, href, descriptionHtml }) {
   const external = /^https?:/i.test(href);
   return `<a class="link-box" href="${escapeHtml(href)}" target="_blank" rel="noopener">
-          <span class="link-box-title">${titleHtml}${external ? ' ↗' : ''}</span>
-          ${descriptionHtml ? `<span class="link-box-description">${descriptionHtml}</span>` : ''}
+          <span class="link-box-icon">${linkIconSvg(external ? 'external' : 'internal', 20)}</span>
+          <span class="link-box-text">
+            <span class="link-box-title">${titleHtml}</span>
+            ${descriptionHtml ? `<span class="link-box-description">${descriptionHtml}</span>` : ''}
+          </span>
+          <span class="link-box-chevron">${linkIconSvg('chevron', 18)}</span>
         </a>`;
 }
 
@@ -501,13 +517,15 @@ function generateAssignmentPages(assignments) {
 
     /* Build exercise list HTML */
     const listHtml = a.exercises
-      .map(
-        (ex) =>
-          `<li>
-            <span id="status-${ex.id}" class="status-icon">⚪️</span>
-            <a href="${basePath}exercises/${ex.id}/?from=${a.id}">${escapeHtml(ex.title)}</a>
-          </li>`,
-      )
+      .map((ex) => {
+        /* "1.2 Dad Jokes" → number column + title */
+        const [, num = '', title = ex.title] = ex.title.match(/^(\d+\.\d+)\s+(.*)$/) || [];
+        return `<li>
+            <span class="exercise-num">${num}</span>
+            <a href="${basePath}exercises/${ex.id}/?from=${a.id}">${escapeHtml(title)}</a>
+            <span id="status-${ex.id}" class="status">Not started</span>
+          </li>`;
+      })
       .join('\n        ');
 
     const json = JSON.stringify({
@@ -542,14 +560,17 @@ function generateExamPages(exams) {
     /* Build tasks HTML */
     const tasksHtml = exam.tasks
       .map(
-        (task) =>
+        (task, i) =>
           `<section id="${task.id}" class="exam-task card" data-task-id="${task.id}" data-has-editor="${task.hasEditor}">
-        <h2>${escapeHtml(task.title)}</h2>
-        ${task.contentHtml ? `<div class="task-content">${task.contentHtml}</div>` : ''}
-        <div class="task-answer-area"></div>
+        <div class="exam-task-header">Question ${i + 1} of ${exam.tasks.length}</div>
+        <div class="exam-task-body">
+          <h2>${escapeHtml(task.title)}</h2>
+          ${task.contentHtml ? `<div class="task-content">${task.contentHtml}</div>` : ''}
+          <div class="task-answer-area"></div>
+        </div>
       </section>`,
       )
-      .join('\n      <hr class="task-separator">\n');
+      .join('\n      ');
 
     /* JSON data for client-side JS (only metadata, not full HTML) */
     const json = JSON.stringify({

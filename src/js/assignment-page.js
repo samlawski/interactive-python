@@ -20,17 +20,17 @@ const data = JSON.parse(
 
 function updateStatusIcons() {
   for (const ex of data.exercises) {
-    const icon = document.getElementById(`status-${ex.id}`);
-    if (!icon) continue;
+    const status = document.getElementById(`status-${ex.id}`);
+    if (!status) continue;
     if (storage.isDone(ex.id)) {
-      icon.textContent = '✅';
-      icon.title = 'Completed';
+      status.textContent = '✓ Done';
+      status.className = 'status is-done';
     } else if (storage.hasWorkedOn(ex.id)) {
-      icon.textContent = '📝';
-      icon.title = 'In progress';
+      status.textContent = 'In progress';
+      status.className = 'status is-progress';
     } else {
-      icon.textContent = '⚪️';
-      icon.title = 'Not started';
+      status.textContent = 'Not started';
+      status.className = 'status';
     }
   }
 }
