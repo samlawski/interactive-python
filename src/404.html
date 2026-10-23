@@ -4,48 +4,66 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>404 — Page Not Found</title>
+  <!-- Styles are inline because this page is served at any path.
+       Colors match the variables in src/css/style.css. -->
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f1f5f9;
-      color: #1e293b;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #ffffff;
+      color: #142a30;
+      line-height: 1.65;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
       text-align: center;
-      padding: 2rem;
+      padding: 2rem 1.5rem;
     }
     .container {
-      max-width: 420px;
+      max-width: 440px;
     }
     .code {
-      font-size: 6rem;
-      font-weight: 800;
-      color: #2563eb;
+      font-size: 5.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #1b6170;
       line-height: 1;
     }
     h1 {
-      font-size: 1.5rem;
-      margin: 0.75rem 0 0.5rem;
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
+      margin: 1rem 0 0.5rem;
+    }
+    .mark {
+      background: linear-gradient(transparent 55%, #ffe27a 55%);
+      padding: 0 0.1em;
     }
     p {
-      color: #64748b;
+      color: #586a70;
       margin-bottom: 1.5rem;
     }
-    a.btn {
-      display: inline-block;
-      padding: 0.6rem 1.5rem;
-      background: #2563eb;
-      color: #fff;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      transition: background 0.2s;
+    a {
+      color: #1b6170;
     }
-    a.btn:hover { background: #1d4ed8; }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      min-height: 40px;
+      padding: 0.5rem 1.1rem;
+      background: #1b6170;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      transition: background 0.15s;
+    }
+    a.btn:hover { background: #154c58; }
+    a.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(27, 97, 112, 0.18); }
     .site-footer {
       position: absolute;
       bottom: 0;
@@ -54,6 +72,7 @@
       padding: 1rem 2rem;
       font-size: 0.75rem;
       line-height: 1.5;
+      color: #586a70;
     }
     .site-footer p { margin: 0.25rem 0; }
     .site-footer a { color: inherit; }
@@ -62,7 +81,7 @@
 <body>
   <div class="container">
     <div class="code">404</div>
-    <h1>Page Not Found</h1>
+    <h1><span class="mark">Page Not Found</span></h1>
     <p>Why don't you try the interactive Python editor on the <a href="/">home page</a>?</p>
     <a class="btn" href="/">← Back to Home</a>
   </div>
