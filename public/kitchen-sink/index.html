@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Kitchen Sink — Python Exercises</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <style>
+    /* Only for this reference page: spacing between the samples */
+    .ks-section { margin-bottom: 3rem; }
+    .ks-section > h2 { margin-bottom: 1rem; }
+    .ks-label { margin: 1.5rem 0 0.5rem; color: var(--text-muted); font-size: 0.85rem; }
+    .ks-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; }
+    .ks-swatch { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; }
+    .ks-swatch span:first-child { width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--border); border-radius: var(--radius); }
+    .ks-swatch code { background: none; padding: 0; }
+    .ks-modal { position: static; background: var(--surface); padding: 2rem 1rem; border-radius: var(--radius); }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="page-header">
+      <a class="back-link" href="../">← Back to the playground</a>
+      <h1><span class="mark">Kitchen Sink</span></h1>
+    </header>
+
+    <section class="instructions card">
+      <p>Every building block of the site on one page, styled by the real <code>assets/style.css</code>. Use it to check a design change everywhere at once. Edit <code>public/kitchen-sink/index.html</code> when you add a new component.</p>
+    </section>
+
+    <!-- Colors -------------------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Colors</h2>
+      <div class="ks-swatches">
+        <div class="ks-swatch"><span style="background: var(--primary)"></span><code>--primary</code></div>
+        <div class="ks-swatch"><span style="background: var(--primary-hover)"></span><code>--primary-hover</code></div>
+        <div class="ks-swatch"><span style="background: var(--primary-tint)"></span><code>--primary-tint</code></div>
+        <div class="ks-swatch"><span style="background: var(--marker)"></span><code>--marker</code></div>
+        <div class="ks-swatch"><span style="background: var(--done)"></span><code>--done</code></div>
+        <div class="ks-swatch"><span style="background: var(--note-bg)"></span><code>--note-bg</code></div>
+        <div class="ks-swatch"><span style="background: var(--bg)"></span><code>--bg</code></div>
+        <div class="ks-swatch"><span style="background: var(--surface)"></span><code>--surface</code></div>
+        <div class="ks-swatch"><span style="background: var(--border)"></span><code>--border</code></div>
+        <div class="ks-swatch"><span style="background: var(--border-strong)"></span><code>--border-strong</code></div>
+        <div class="ks-swatch"><span style="background: var(--text-muted)"></span><code>--text-muted</code></div>
+        <div class="ks-swatch"><span style="background: var(--text)"></span><code>--text</code></div>
+        <div class="ks-swatch"><span style="background: var(--code-bg)"></span><code>--code-bg</code></div>
+        <div class="ks-swatch"><span style="background: var(--code-bar)"></span><code>--code-bar</code></div>
+        <div class="ks-swatch"><span style="background: var(--terminal-success)"></span><code>--terminal-success</code></div>
+        <div class="ks-swatch"><span style="background: var(--terminal-error)"></span><code>--terminal-error</code></div>
+        <div class="ks-swatch"><span style="background: var(--warning)"></span><code>--warning</code></div>
+      </div>
+    </section>
+
+    <!-- Content (Markdown output) ------------------------------------- -->
+    <section class="ks-section">
+      <h2>Content</h2>
+      <div class="instructions">
+        <h1>1.2 Dad Jokes (print)</h1>
+        <p>The first heading of an exercise's instructions gets the title marker. Everything below is what Markdown turns into.</p>
+        <h2>Task</h2>
+        <p>Body text with <strong>bold</strong>, <em>italics</em>, <a href="#content">a link</a> and <code>inline_code()</code>.</p>
+        <h3>Sub-heading</h3>
+        <ul>
+          <li>A bullet point</li>
+          <li>Another bullet point</li>
+        </ul>
+        <ol>
+          <li>A numbered step</li>
+          <li>Another numbered step</li>
+        </ol>
+        <blockquote>
+          <p><strong>Important:</strong> Do not use generative AI or search engines to find the solution.</p>
+        </blockquote>
+        <pre><code>name = input("What is your name?\n")
+print(f"Hello {name}!")</code></pre>
+        <table>
+          <thead><tr><th>Operator</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>+</code></td><td>Addition</td></tr>
+            <tr><td><code>//</code></td><td>Integer division</td></tr>
+          </tbody>
+        </table>
+        <details>
+          <summary>💡 Hints</summary>
+          <p>You can add strings together with the <code>+</code> operator.</p>
+        </details>
+        <p>Press <kbd>Shift</kbd> + <kbd>Enter</kbd> to run a cell.</p>
+        <hr>
+        <p>Text after a horizontal rule.</p>
+      </div>
+    </section>
+
+    <!-- Link boxes ---------------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Link boxes</h2>
+      <div class="link-grid">
+        <a class="link-box" href="https://python.org" target="_blank" rel="noopener">
+          <span class="link-box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></span>
+          <span class="link-box-text">
+            <span class="link-box-title">python.org</span>
+            <span class="link-box-description">An external link. The official Python website.</span>
+          </span>
+          <span class="link-box-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="link-box" href="../tutorials/python/" target="_blank" rel="noopener">
+          <span class="link-box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          <span class="link-box-text">
+            <span class="link-box-title">Python tutorials</span>
+            <span class="link-box-description">An internal link with <strong>bold</strong> and <code>code</code> in the description.</span>
+          </span>
+          <span class="link-box-chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Buttons ------------------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Buttons</h2>
+      <section class="controls">
+        <div class="controls-left">
+          <button class="btn btn-primary">▶ Run</button>
+          <button class="btn btn-secondary">🧪 Test</button>
+        </div>
+        <div class="controls-right">
+          <button class="btn btn-warning">↺ Reset</button>
+          <button id="done-btn" class="btn">✓ Mark as Done</button>
+          <button class="btn btn-success">✓ Done</button>
+        </div>
+      </section>
+      <p class="ks-label">Disabled, navigation, cancel and small</p>
+      <div class="controls">
+        <div class="controls-left">
+          <button class="btn btn-primary" disabled>▶ Run</button>
+          <a class="btn btn-nav" href="#buttons">← Previous Task</a>
+          <a class="btn btn-nav" href="#buttons">Next Task →</a>
+        </div>
+        <div class="controls-right">
+          <button class="btn btn-cancel">Cancel</button>
+          <button class="btn btn-primary btn-small-dl">⬇ Download All My Code</button>
+          <button class="btn-small">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Editor and output --------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Editor and output</h2>
+      <section class="editor-section card">
+        <div class="editor-header">
+          <span>solution.py</span>
+        </div>
+        <pre class="terminal">print("Hello there!")
+print("I can count the letters in your name.")</pre>
+      </section>
+      <section class="terminal-section card">
+        <div class="terminal-header">
+          <span>Output</span>
+          <button class="btn-small">Clear</button>
+        </div>
+        <div class="terminal"><span class="muted">Running tests…</span>
+<span class="error">❌ Line 2 is missing</span>
+<span class="success">✅ Output has at least 3 lines</span>
+<span class="input-echo">What is your name? Sam</span>
+What is your name? <input class="terminal-input-field" aria-label="Terminal input"></div>
+      </section>
+      <p class="ks-label">The real editor is CodeMirror; this sample uses a plain block with the same colors.</p>
+    </section>
+
+    <!-- Exercise list ------------------------------------------------- -->
+    <section class="ks-section">
+      <div class="section-header">
+        <h2>Exercise list</h2>
+        <button class="btn btn-primary btn-small-dl">⬇ Download All My Code</button>
+      </div>
+      <ul class="exercise-list">
+        <li>
+          <span class="exercise-num">1.1</span>
+          <a href="#exercise-list">Brick In The Wall</a>
+          <span class="status is-done">✓ Done</span>
+        </li>
+        <li>
+          <span class="exercise-num">1.2</span>
+          <a href="#exercise-list">Dad Jokes</a>
+          <span class="status is-progress">In progress</span>
+        </li>
+        <li>
+          <span class="exercise-num">1.3</span>
+          <a href="#exercise-list">Area Of Triangle</a>
+          <span class="status">Not started</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Exam question ------------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Exam question</h2>
+      <section class="exam-task card">
+        <div class="exam-task-header">Question 2 of 8</div>
+        <div class="exam-task-body">
+          <h2>Tuples in Python are immutable. What does this mean? (5 points)</h2>
+          <div class="task-content">
+            <p>Please describe what immutability means and what one may want to use an immutable data structure for.</p>
+          </div>
+          <div class="task-answer-area">
+            <textarea class="exam-textarea" rows="4" placeholder="Enter your answer here…" aria-label="Answer"></textarea>
+          </div>
+          <div class="task-nav">
+            <a class="btn btn-nav" href="#exam-question">← Previous Task</a>
+            <a class="btn btn-nav" href="#exam-question">Next Task →</a>
+          </div>
+        </div>
+      </section>
+      <div class="exam-download">
+        <a class="btn btn-start-exam" href="#exam-question">▶ Start Exam</a>
+        <button class="btn btn-primary">⬇ Download My Answers</button>
+      </div>
+    </section>
+
+    <!-- Tutorial toolbar ---------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Tutorial toolbar</h2>
+      <div class="nb-toolbar">
+        <span>🟢 Python is ready. Press ▶ Run or Shift+Enter in a code cell.</span>
+        <button class="btn-small">↺ Restart Python</button>
+      </div>
+    </section>
+
+    <!-- Dialog -------------------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Dialog</h2>
+      <div class="modal-backdrop ks-modal">
+        <div class="modal">
+          <h3>Reset exercise?</h3>
+          <p>This will discard all your changes and restore the original starting code.</p>
+          <input type="email" class="email-input" placeholder="your@email.com" aria-label="Email">
+          <div class="modal-actions">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-warning">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="site-footer">
+    <p>Reference page for the site's design. Not linked from the course pages.</p>
+  </footer>
+</body>
+</html>
