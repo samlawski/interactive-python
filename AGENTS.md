@@ -14,7 +14,7 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ## Architecture
 
-- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/` and `exams/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
+- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/` and `pages/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
 - `vite.config.js`: one entry per page type (`exercise-page`, `assignment-page`, `index-page`, `exam-page`). Vite is used only as a bundler, called from `build.js`, never as a dev server.
 - `src/js/`: ES modules, one `*-page.js` per page type plus shared modules (`python-runner`, `editor`, `terminal`, `storage`, `integrity`).
 - `src/sw.js`: service worker. It precaches Pyodide (cache-first) and serves everything else network-first with a cache fallback. Bump `CACHE` whenever the caching behavior or precache list changes.
@@ -46,8 +46,24 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ### Assignments (`assignments/*.md`) and exams (`exams/*.md`)
 
-- YAML-ish frontmatter (`title`, `exercises:` list of folder names) parsed by the custom `parseFrontmatter` in `build.js`. It supports scalars and `- item` lists only, so don't use nested YAML.
+- YAML-ish frontmatter (`title`, `exercises:` list of folder names) parsed by the custom `parseFrontmatter` in `build.js`. It supports scalars, `- item` lists and lists of flat `key: value` objects (see Pages) only, so don't use deeper nesting, multi-line values or other YAML features.
 - Exams are added before an exam session and removed afterwards (see the git history). Don't add or remove exams unless asked.
+
+### Pages (`pages/<slug>.md`)
+
+- Static pages served from the site root: `pages/os01.md` → `/os01/`. Slugs must not clash with top-level build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `sw`); the build fails if they do.
+- Same format as assignments: frontmatter, then a Markdown body (raw HTML allowed) shown at the top of the page.
+- `links:` is an optional list of link boxes, shown as a two-column grid below the body (one column on small screens). Each item needs `title` and `url`; `description` is optional and supports inline Markdown only (bold, italics, code; no links, since the whole box is already a link):
+
+  ```yaml
+  links:
+    - title: Week 1 – Python Basics
+      url: assignments/os01-week-1/
+      description: Start here with **printing** and *variables*.
+  ```
+
+- `url` values with a scheme (`https://`, `mailto:`) are used as is. All link boxes open in a new tab; `http(s)` links also get a ↗ after the title. Anything else is relative to the site root (`assignments/os01-week-1/`, `./` for the home page). Don't start internal links with `/`, because the site may be hosted in a subfolder.
+- External links are fine here because students click them; pages still must not *load* anything from other origins (rule 4).
 
 ### Tone
 

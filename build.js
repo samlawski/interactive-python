@@ -6,7 +6,7 @@
    Usage:   node build.js
    Output:  dist/
 
-   Reads exercises/ and assignments/, renders Markdown, bundles JS/CSS
+   Reads exercises/, assignments/, exams/ and pages/, renders Markdown, bundles JS/CSS
    with Vite, copies Pyodide files, and produces a fully self-contained
    static site ready for deployment.
    =================================================================== */
@@ -24,6 +24,7 @@ const DIST = path.join(__dirname, 'dist');
 const EXERCISES_DIR = path.join(__dirname, 'exercises');
 const ASSIGNMENTS_DIR = path.join(__dirname, 'assignments');
 const EXAMS_DIR = path.join(__dirname, 'exams');
+const PAGES_DIR = path.join(__dirname, 'pages');
 const TEMPLATES_DIR = path.join(__dirname, 'src', 'templates');
 
 /* ------------------------------------------------------------------ */
@@ -53,7 +54,12 @@ function readOpt(filePath) {
 
 /**
  * Parse simple YAML-ish frontmatter delimited by `---`.
- * Supports scalar values and arrays (lines starting with `  - `).
+ * Supports scalar values, arrays (lines starting with `  - `) and
+ * arrays of objects:
+ *
+ *   links:
+ *     - title: Python docs
+ *       url: https://docs.python.org
  *
  * Returns { meta: {…}, body: "…" }
  */
@@ -63,24 +69,44 @@ function parseFrontmatter(text) {
 
   const meta = {};
   let currentKey = null;
+  let currentItem = null; /* object being filled by indented "key: value" lines */
 
   for (const line of match[1].split(/\r?\n/)) {
     const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
+    const itemMatch = line.match(/^\s+-\s+(.*)/);
+    const itemKvMatch = itemMatch?.[1].match(/^(\w[\w-]*):(?:\s+(.*)|$)/);
+    const nestedKvMatch = line.match(/^\s+(\w[\w-]*):(?:\s+(.*)|$)/);
+
     if (kvMatch) {
       currentKey = kvMatch[1];
+      currentItem = null;
       const val = kvMatch[2].trim();
       if (val) {
         meta[currentKey] = val;
       } else {
         meta[currentKey] = []; /* will be filled by "- " lines */
       }
-    } else if (currentKey && line.match(/^\s+-\s+/)) {
+    } else if (currentKey && itemKvMatch) {
       if (!Array.isArray(meta[currentKey])) meta[currentKey] = [];
-      meta[currentKey].push(line.replace(/^\s+-\s+/, '').trim());
+      currentItem = { [itemKvMatch[1]]: unquote(itemKvMatch[2]) };
+      meta[currentKey].push(currentItem);
+    } else if (currentKey && itemMatch) {
+      if (!Array.isArray(meta[currentKey])) meta[currentKey] = [];
+      currentItem = null;
+      meta[currentKey].push(itemMatch[1].trim());
+    } else if (currentItem && nestedKvMatch) {
+      currentItem[nestedKvMatch[1]] = unquote(nestedKvMatch[2]);
     }
   }
 
   return { meta, body: match[2] };
+}
+
+/** Trim a frontmatter value and strip one pair of surrounding quotes. */
+function unquote(val = '') {
+  const trimmed = val.trim();
+  const quoted = trimmed.match(/^(["'])(.*)\1$/);
+  return quoted ? quoted[2] : trimmed;
 }
 
 /** Convert a folder name like "1-1-hello-world" to a readable title. */
@@ -231,7 +257,52 @@ function readExams() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  4. Generate HTML pages                                             */
+/*  4. Read pages                                                      */
+/* ------------------------------------------------------------------ */
+
+/** Top-level names in dist/ that a page must not overwrite. */
+const RESERVED_PAGE_IDS = [
+  'index', '404', 'assets', 'pyodide', 'exercises', 'assignments', 'exams', 'sw',
+];
+
+function readPages() {
+  if (!fs.existsSync(PAGES_DIR)) return [];
+
+  return fs
+    .readdirSync(PAGES_DIR)
+    .filter((f) => f.endsWith('.md'))
+    .sort()
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(PAGES_DIR, file), 'utf-8');
+      const { meta, body } = parseFrontmatter(raw);
+      const id = file.replace(/\.md$/, '');
+
+      if (RESERVED_PAGE_IDS.includes(id)) {
+        throw new Error(`pages/${file}: "${id}" is reserved, please rename the page.`);
+      }
+
+      const links = (meta.links || []).filter((l) => typeof l === 'object');
+      for (const link of links) {
+        if (!link.title || !link.url) {
+          throw new Error(`pages/${file}: every link needs a title and a url.`);
+        }
+      }
+
+      return {
+        id,
+        title: meta.title || folderToTitle(id),
+        descriptionHtml: renderMarkdown(body),
+        links: links.map((l) => ({
+          title: l.title,
+          url: l.url,
+          descriptionHtml: l.description ? marked.parseInline(l.description) : '',
+        })),
+      };
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/*  5. Generate HTML pages                                             */
 /* ------------------------------------------------------------------ */
 
 function generateExercisePages(exercises) {
@@ -357,6 +428,50 @@ function generateExamPages(exams) {
   }
 }
 
+/**
+ * Resolve a link URL for a page at `basePath`. URLs with a scheme
+ * (https:, mailto:, …), absolute paths and anchors are kept as they
+ * are; anything else is treated as relative to the site root.
+ */
+function resolveLinkUrl(url, basePath) {
+  if (/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(url)) return url;
+  return basePath + url.replace(/^\.\//, '');
+}
+
+function generatePages(pages) {
+  const template = fs.readFileSync(
+    path.join(TEMPLATES_DIR, 'page.html'),
+    'utf-8',
+  );
+
+  for (const page of pages) {
+    const basePath = '../';
+
+    /* Build link grid HTML */
+    const linksHtml = page.links
+      .map((link) => {
+        const external = /^https?:/i.test(link.url);
+        return `<a class="link-box" href="${escapeHtml(resolveLinkUrl(link.url, basePath))}" target="_blank" rel="noopener">
+          <span class="link-box-title">${escapeHtml(link.title)}${external ? ' ↗' : ''}</span>
+          ${link.descriptionHtml ? `<span class="link-box-description">${link.descriptionHtml}</span>` : ''}
+        </a>`;
+      })
+      .join('\n        ');
+
+    const html = template
+      .replace(/\{\{TITLE\}\}/g, escapeHtml(page.title))
+      .replace('{{DESCRIPTION_HTML}}', page.descriptionHtml)
+      .replace('{{DESCRIPTION_ATTR}}', page.descriptionHtml.trim() ? '' : 'style="display:none"')
+      .replace('{{LINKS_HTML}}', linksHtml)
+      .replace('{{LINKS_ATTR}}', page.links.length ? '' : 'style="display:none"')
+      .replace(/\{\{BASE\}\}/g, basePath);
+
+    const dir = path.join(DIST, page.id);
+    mkDir(dir);
+    fs.writeFileSync(path.join(dir, 'index.html'), html);
+  }
+}
+
 function generateIndexPage(assignments, exercises) {
   const template = fs.readFileSync(
     path.join(TEMPLATES_DIR, 'index.html'),
@@ -385,7 +500,7 @@ function escapeHtml(str) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  4. Copy Pyodide runtime                                            */
+/*  6. Copy Pyodide runtime                                            */
 /* ------------------------------------------------------------------ */
 
 function copyPyodide() {
@@ -411,7 +526,7 @@ function copyPyodide() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  5. Bundle JS / CSS with Vite                                       */
+/*  7. Bundle JS / CSS with Vite                                       */
 /* ------------------------------------------------------------------ */
 
 async function bundle() {
@@ -437,8 +552,9 @@ async function main() {
   const exercises = readExercises();
   const assignments = readAssignments(exercises);
   const exams = readExams();
+  const pages = readPages();
   console.log(
-    `  Found ${exercises.length} exercise(s), ${assignments.length} assignment(s), ${exams.length} exam(s)`,
+    `  Found ${exercises.length} exercise(s), ${assignments.length} assignment(s), ${exams.length} exam(s), ${pages.length} page(s)`,
   );
 
   /* Bundle JS/CSS first (outputs to dist/assets/) */
@@ -451,6 +567,7 @@ async function main() {
   generateExercisePages(exercises);
   generateAssignmentPages(assignments);
   generateExamPages(exams);
+  generatePages(pages);
   generateIndexPage(assignments, exercises);
 
   /* Copy service worker to dist root (for exam offline support) */
