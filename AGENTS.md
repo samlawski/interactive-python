@@ -14,7 +14,7 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ## Architecture
 
-- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/`, `pages/` and `tutorials/`, copies `public/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
+- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/`, `pages/` and `tutorials/`, copies `public/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js`, `404.html` and `kitchen-sink.html` (a design reference of every component, served unlinked at `/kitchen-sink/`; add new components to it).
 - `vite.config.js`: one entry per page type (`exercise-page`, `assignment-page`, `index-page`, `exam-page`, `tutorial-page`). Vite is used only as a bundler, called from `build.js`, never as a dev server.
 - `src/js/`: ES modules, one `*-page.js` per page type plus shared modules (`python-runner`, `editor`, `terminal`, `storage`, `integrity`).
 - `src/sw.js`: service worker. It precaches Pyodide (cache-first) and serves everything else network-first with a cache fallback. Bump `CACHE` whenever the caching behavior or precache list changes.
@@ -52,7 +52,7 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ### Pages (`pages/**/*.md`)
 
-- Static pages served from the site root: `pages/os01.md` → `/os01/`. Sub-folders nest: `pages/se19/index.md` → `/se19/`, `pages/se19/1-html.md` → `/se19/1-html/`. Top-level names must not clash with the build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `tutorials`, `sw`) or with anything in `public/`; the build fails if they do.
+- Static pages served from the site root: `pages/os01.md` → `/os01/`. Sub-folders nest: `pages/se19/index.md` → `/se19/`, `pages/se19/1-html.md` → `/se19/1-html/`. Top-level names must not clash with the build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `tutorials`, `sw`, `kitchen-sink`) or with anything in `public/`; the build fails if they do.
 - Frontmatter: `title`, optional `icon` (an emoji shown before the title), optional `link_boxes` (default `false`), optional `redirect`. Then a Markdown body (raw HTML allowed). `README.md` has the full frontmatter reference; keep it in sync when fields change.
 - **Link boxes:** on pages with `link_boxes: true`, a bullet list where every item is exactly one link with a description in the link title, `- [Title](url "description")`, renders as a single-column list of clickable boxes right where it stands. Lists with any other item stay normal lists. Without the flag, these lists render as normal links. There is no frontmatter link list; links always live in the Markdown.
 - Box descriptions support inline Markdown only (bold, italics, code; no links, since the whole box is already a link). All link boxes open in a new tab and get an icon: ↗ for `http(s)` links, → for links within the site.

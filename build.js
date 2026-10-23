@@ -241,7 +241,7 @@ function readExams() {
 /** Top-level names in dist/ that a page must not overwrite. */
 const RESERVED_PAGE_IDS = [
   'index', '404', 'assets', 'pyodide', 'exercises', 'assignments', 'exams', 'sw',
-  TUTORIALS_URL,
+  'kitchen-sink', TUTORIALS_URL,
 ];
 
 /**
@@ -642,7 +642,7 @@ function generatePages(pages) {
 
 /**
  * Replace the {{FOOTER}} placeholder in every generated HTML file
- * (templates and 404.html) with src/templates/footer.html.
+ * (templates, 404.html and kitchen-sink.html) with src/templates/footer.html.
  */
 function insertFooter() {
   const footer = fs.readFileSync(path.join(TEMPLATES_DIR, 'footer.html'), 'utf-8').trim();
@@ -828,6 +828,13 @@ async function main() {
   if (fs.existsSync(notFoundSrc)) {
     fs.copyFileSync(notFoundSrc, path.join(DIST, '404.html'));
   }
+
+  /* Copy the design reference page to /kitchen-sink/ (not linked anywhere) */
+  fs.mkdirSync(path.join(DIST, 'kitchen-sink'), { recursive: true });
+  fs.copyFileSync(
+    path.join(__dirname, 'src', 'kitchen-sink.html'),
+    path.join(DIST, 'kitchen-sink', 'index.html'),
+  );
 
   /* Fine-print footer on every page */
   insertFooter();
