@@ -619,6 +619,23 @@ function generatePages(pages) {
   }
 }
 
+/**
+ * Replace the {{FOOTER}} placeholder in every generated HTML file
+ * (templates and 404.html) with src/templates/footer.html.
+ */
+function insertFooter() {
+  const footer = fs.readFileSync(path.join(TEMPLATES_DIR, 'footer.html'), 'utf-8').trim();
+
+  for (const file of fs.readdirSync(DIST, { recursive: true })) {
+    if (!file.endsWith('.html') || file.startsWith(`pyodide${path.sep}`)) continue;
+    const filePath = path.join(DIST, file);
+    const html = fs.readFileSync(filePath, 'utf-8');
+    if (html.includes('{{FOOTER}}')) {
+      fs.writeFileSync(filePath, html.replace('{{FOOTER}}', () => footer));
+    }
+  }
+}
+
 /** Copy static files from public/ to the dist/ root as they are. */
 function copyPublic() {
   if (!fs.existsSync(PUBLIC_DIR)) return;
@@ -790,6 +807,9 @@ async function main() {
   if (fs.existsSync(notFoundSrc)) {
     fs.copyFileSync(notFoundSrc, path.join(DIST, '404.html'));
   }
+
+  /* Fine-print footer on every page */
+  insertFooter();
 
   console.log('  ✓ HTML pages generated');
 
