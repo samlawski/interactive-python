@@ -8,6 +8,7 @@ export default defineConfig({
         'assignment-page': 'src/js/assignment-page.js',
         'index-page': 'src/js/index-page.js',
         'exam-page': 'src/js/exam-page.js',
+        'tutorial-page': 'src/js/tutorial-page.js',
       },
       output: {
         entryFileNames: '[name].js',

@@ -1,6 +1,6 @@
 # Python Exercises
 
-A static site of beginner Python exercises, assignments, exams and content pages for students at CODE. Python runs **in the browser** through Pyodide (WebAssembly). Students edit code in CodeMirror, run it, and test it against `test.py`. Progress is saved in `localStorage`. Exams have to work with **WiFi turned off**.
+A static site of beginner Python exercises, assignments, exams, interactive tutorials and content pages for students at CODE. Python runs **in the browser** through Pyodide (WebAssembly). Students edit code in CodeMirror, run it, and test it against `test.py`. Progress is saved in `localStorage`. Exams have to work with **WiFi turned off**.
 
 These instructions apply to any AI coding agent or assistant working in this repository.
 
@@ -14,8 +14,8 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ## Architecture
 
-- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/` and `pages/`, copies `public/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
-- `vite.config.js`: one entry per page type (`exercise-page`, `assignment-page`, `index-page`, `exam-page`). Vite is used only as a bundler, called from `build.js`, never as a dev server.
+- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/`, `pages/` and `tutorials/`, copies `public/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
+- `vite.config.js`: one entry per page type (`exercise-page`, `assignment-page`, `index-page`, `exam-page`, `tutorial-page`). Vite is used only as a bundler, called from `build.js`, never as a dev server.
 - `src/js/`: ES modules, one `*-page.js` per page type plus shared modules (`python-runner`, `editor`, `terminal`, `storage`, `integrity`).
 - `src/sw.js`: service worker. It precaches Pyodide (cache-first) and serves everything else network-first with a cache fallback. Bump `CACHE` whenever the caching behavior or precache list changes.
 - `pages/` and `public/`: static content pages and the files they reference (see Content conventions).
@@ -52,13 +52,24 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ### Pages (`pages/**/*.md`)
 
-- Static pages served from the site root: `pages/os01.md` → `/os01/`. Sub-folders nest: `pages/se19/index.md` → `/se19/`, `pages/se19/1-html.md` → `/se19/1-html/`. Top-level names must not clash with the build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `sw`) or with anything in `public/`; the build fails if they do.
+- Static pages served from the site root: `pages/os01.md` → `/os01/`. Sub-folders nest: `pages/se19/index.md` → `/se19/`, `pages/se19/1-html.md` → `/se19/1-html/`. Top-level names must not clash with the build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `tutorials`, `sw`) or with anything in `public/`; the build fails if they do.
 - Frontmatter: `title`, optional `icon` (an emoji shown before the title), optional `link_boxes` (default `false`), optional `redirect`. Then a Markdown body (raw HTML allowed). `README.md` has the full frontmatter reference; keep it in sync when fields change.
 - **Link boxes:** on pages with `link_boxes: true`, a bullet list where every item is exactly one link with a description in the link title, `- [Title](url "description")`, renders as a single-column list of clickable boxes right where it stands. Lists with any other item stay normal lists. Without the flag, these lists render as normal links. There is no frontmatter link list; links always live in the Markdown.
 - Box descriptions support inline Markdown only (bold, italics, code; no links, since the whole box is already a link). All link boxes open in a new tab; `http(s)` links also get a ↗ after the title.
 - **URLs:** values with a scheme (`https://`, `mailto:`) are used as is. Anything else, in link boxes, other links and images alike, is relative to the site root (`assignments/os01-week-1/`, `random-files/x.png`, `./` for the home page) and resolved for the page's depth. Don't start internal links with `/`, because the site may be hosted in a subfolder. Raw HTML `<a>`/`<img>` tags are not rewritten.
 - **Redirects:** a page whose frontmatter has only `redirect: <url>` becomes an instant redirect (meta refresh plus a fallback link). The URL follows the same rules, e.g. `redirect: se456/`.
 - External links are fine here because students click them; pages still must not *load* anything from other origins (rule 4). Put images and downloads in `public/`.
+
+### Tutorials (`tutorials/<topic>/`)
+
+- Jupyter notebooks, rendered without Jupyter: `tutorials/python/02-numbers-math-variables.ipynb` → `/tutorials/python/numbers-math-variables/`. Name files `<NN>-<slug>.ipynb`: the number sets the order ("Next" links stay within the folder) and is dropped from the URL.
+- Each topic folder has an `index.md` landing page (`tutorials/python/index.md` → `/tutorials/python/`). It is a normal page with the same frontmatter as `pages/`, usually `link_boxes: true` with one link box per notebook. Add new notebooks to it by hand.
+- Commit notebooks as they come from Jupyter/VS Code. `build.js` reads the JSON itself (no nbformat or Jupyter dependency).
+- The first `# Heading` of the first Markdown cell becomes the page title and is removed from the content. Markdown cells render like pages (raw HTML allowed, headings get Jupyter-style ids so table-of-contents links work). Embedded image attachments are written next to the page.
+- Code cells become a CodeMirror editor with ▶ Run (also Shift+Enter) and an output area. Cells with `"editable": false` metadata are read-only. Saved outputs in the notebook are ignored.
+- At runtime (`tutorial-page.js`, `runCell()` in `python-runner.js`) all cells of a page share one Python namespace like a Jupyter kernel, the value of a cell's last expression is printed (a trailing `;` hides it), and "Restart Python" clears the namespace. `input()` replays only the current cell, after restoring the namespace from a deep-copy snapshot.
+- Not supported: magics (`%`, `%%`, `!`), rich outputs (plots, HTML), LaTeX math. Write formulas as code or plain text instead.
+- Edited cell code is saved in `localStorage` per cell (by the notebook's cell `id`, falling back to its position).
 
 ### Static files (`public/`)
 

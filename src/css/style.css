@@ -608,6 +608,87 @@ details[open] summary {
   margin: 0.75rem 0 1.25rem;
 }
 
+/* --- Tutorials (notebooks) ---------------------------------------- */
+
+.nb-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.nb-code {
+  margin: 1rem 0 1.25rem;
+}
+
+.nb-code .card {
+  margin-bottom: 0;
+}
+
+.nb-code .editor-section {
+  overflow: hidden;
+}
+
+.nb-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nb-actions .btn {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.nb-actions .btn-small {
+  color: #abb2bf;
+  border-color: #4b5263;
+}
+
+.nb-output {
+  margin-top: 0.5rem;
+}
+
+.nb-output[hidden] {
+  display: none;
+}
+
+.terminal-compact {
+  min-height: 0;
+}
+
+.nb-nav {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.nb-nav .btn:hover {
+  text-decoration: none;
+}
+
+kbd {
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
 /* --- Confirmation Modal ------------------------------------------- */
 
 .modal-backdrop {

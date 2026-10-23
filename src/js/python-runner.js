@@ -59,6 +59,32 @@ def _custom_input(prompt=""):
     raise _NeedInputError()
 
 _builtins.input = _custom_input
+
+# --- Notebook cells (tutorials) ---------------------------------------
+async def _run_cell(code, namespace):
+    """Run one notebook cell in a shared namespace. Like Jupyter, show
+       the value of a final expression (unless it ends with ";")."""
+    from pyodide.code import eval_code_async
+    result = await eval_code_async(code, namespace, filename="<cell>")
+    if result is not None:
+        print(repr(result))
+
+def _snapshot_namespace(namespace):
+    """Deep-copy variables so in-place changes (e.g. list.append) can be
+       undone. Values that can't be copied (modules, …) are shared."""
+    import copy
+    memo = {}  # shared, so two names for one list stay one list
+    snapshot = {}
+    for key, value in namespace.items():
+        try:
+            snapshot[key] = copy.deepcopy(value, memo)
+        except Exception:
+            snapshot[key] = value
+    return snapshot
+
+def _restore_namespace(namespace, snapshot):
+    namespace.clear()
+    namespace.update(_snapshot_namespace(snapshot))
 `;
 
 /* ------------------------------------------------------------------ */
@@ -131,6 +157,61 @@ export async function runTests(pyodide, solutionCode, testCode, terminal) {
   }
 }
 
+/**
+ * Create an empty namespace for notebook cells. Variables defined in
+ * one cell stay available to the next, like a Jupyter kernel.
+ */
+export function createNamespace(pyodide) {
+  return pyodide.runPython('{"__name__": "__main__"}');
+}
+
+/**
+ * Run one notebook cell in `namespace` and print the value of its last
+ * expression. input() uses the same replay mechanism as runCode(), but
+ * only re-runs this cell, after restoring the namespace to how it was
+ * before the cell started.
+ */
+export async function runCell(pyodide, code, terminal, namespace) {
+  const inputs = [];
+  const snapshotFn = pyodide.globals.get('_snapshot_namespace');
+  const snapshot = snapshotFn(namespace);
+  const runCellPy = pyodide.globals.get('_run_cell');
+  const restore = pyodide.globals.get('_restore_namespace');
+
+  try {
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      terminal.clear();
+      _setupStdio(pyodide, terminal);
+      _resetInputBuffer(pyodide, inputs);
+
+      try {
+        await runCellPy(code, namespace);
+        break;
+      } catch (err) {
+        const msg = err.message || String(err);
+        if (msg.includes('_NeedInputError')) {
+          inputs.push(await terminal.promptInput());
+          restore(namespace, snapshot);
+        } else {
+          terminal.writeError(_cleanError(err, 'File "<cell>"'));
+          if (msg.includes('NameError')) {
+            terminal.writeInfo(
+              '💡 Tip: if this name is defined in a cell above, run that cell first.\n',
+            );
+          }
+          break;
+        }
+      }
+    }
+  } finally {
+    snapshot.destroy();
+    snapshotFn.destroy();
+    runCellPy.destroy();
+    restore.destroy();
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  Internal helpers                                                   */
 /* ------------------------------------------------------------------ */
@@ -177,9 +258,9 @@ function _resetInputBuffer(pyodide, inputs) {
  * Strip internal Pyodide frames from error messages to keep output
  * readable for students.
  */
-function _cleanError(err) {
+function _cleanError(err, marker = 'File "<exec>"') {
   let msg = err.message || String(err);
-  const pyErr = msg.indexOf('File "<exec>"');
+  const pyErr = msg.indexOf(marker);
   if (pyErr !== -1) {
     msg = msg.slice(pyErr);
   }

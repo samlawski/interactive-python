@@ -33,6 +33,11 @@ export function hasWorkedOn(exerciseId) {
   return localStorage.getItem(`${PREFIX}${exerciseId}-code`) !== null;
 }
 
+/** Remove the saved code for an exercise or tutorial cell. */
+export function clearCode(exerciseId) {
+  localStorage.removeItem(`${PREFIX}${exerciseId}-code`);
+}
+
 /** Clear all saved state for an exercise (code + done status). */
 export function clearExercise(exerciseId) {
   localStorage.removeItem(`${PREFIX}${exerciseId}-code`);

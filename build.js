@@ -6,7 +6,7 @@
    Usage:   node build.js
    Output:  dist/
 
-   Reads exercises/, assignments/, exams/ and pages/, renders Markdown,
+   Reads exercises/, assignments/, exams/, pages/ and tutorials/, renders Markdown,
    bundles JS/CSS with Vite, copies Pyodide and public/ files, and produces a fully self-contained
    static site ready for deployment.
    =================================================================== */
@@ -26,6 +26,8 @@ const ASSIGNMENTS_DIR = path.join(__dirname, 'assignments');
 const EXAMS_DIR = path.join(__dirname, 'exams');
 const PAGES_DIR = path.join(__dirname, 'pages');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+const TUTORIALS_DIR = path.join(__dirname, 'tutorials');
+const TUTORIALS_URL = 'tutorials'; /* dist/ folder and URL of the tutorials */
 const TEMPLATES_DIR = path.join(__dirname, 'src', 'templates');
 
 /* ------------------------------------------------------------------ */
@@ -239,6 +241,7 @@ function readExams() {
 /** Top-level names in dist/ that a page must not overwrite. */
 const RESERVED_PAGE_IDS = [
   'index', '404', 'assets', 'pyodide', 'exercises', 'assignments', 'exams', 'sw',
+  TUTORIALS_URL,
 ];
 
 /**
@@ -275,10 +278,13 @@ function getDescribedLink(item) {
 
 /**
  * Render a page's Markdown. Relative links and images resolve against
- * the site root, and (if `linkBoxes` is true) lists made only of
- * described links (`- [Title](url "description")`) become link boxes.
+ * the site root. Options:
+ * - `linkBoxes`: lists made only of described links
+ *   (`- [Title](url "description")`) become link boxes.
+ * - `headingIds`: headings get Jupyter-style ids ("My Title" →
+ *   "My-Title") so notebook table-of-contents links work.
  */
-function renderPageMarkdown(md, basePath, linkBoxes = false) {
+function renderPageMarkdown(md, basePath, { linkBoxes = false, headingIds = false } = {}) {
   const pageMarked = new Marked({ breaks: false, gfm: true });
 
   pageMarked.use({
@@ -299,6 +305,20 @@ function renderPageMarkdown(md, basePath, linkBoxes = false) {
         }));
         return `<div class="link-grid">\n        ${boxes.join('\n        ')}\n</div>\n`;
       },
+      heading({ tokens, depth }) {
+        if (!headingIds) return false;
+
+        const html = this.parser.parseInline(tokens);
+        const text = html
+          .replace(/<[^>]*>/g, '')
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>');
+        const id = text.trim().replace(/\s+/g, '-');
+        return `<h${depth} id="${escapeHtml(id)}">${html}</h${depth}>\n`;
+      },
     },
   });
 
@@ -314,24 +334,30 @@ function listMarkdownFiles(dir) {
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 }
 
-function readPages() {
-  if (!fs.existsSync(PAGES_DIR)) return [];
+/**
+ * Read Markdown pages from `dir`. Pages are served below `urlPrefix`
+ * ("" for the site root, "tutorials" for the index.md files in tutorials/).
+ */
+function readPages(dir = PAGES_DIR, urlPrefix = '') {
+  if (!fs.existsSync(dir)) return [];
 
-  const reserved = [
+  const label = path.relative(__dirname, dir);
+  const reserved = urlPrefix ? [] : [
     ...RESERVED_PAGE_IDS,
     ...(fs.existsSync(PUBLIC_DIR) ? fs.readdirSync(PUBLIC_DIR) : []),
   ];
 
-  return listMarkdownFiles(PAGES_DIR).map((file) => {
-    const raw = fs.readFileSync(path.join(PAGES_DIR, file), 'utf-8');
+  return listMarkdownFiles(dir).map((file) => {
+    const raw = fs.readFileSync(path.join(dir, file), 'utf-8');
     const { meta, body } = parseFrontmatter(raw);
 
     /* "os01.md" → "os01", "se19/index.md" → "se19", "se19/1-html.md" → "se19/1-html" */
-    const id = file.replace(/\.md$/, '').replace(/(^|\/)index$/, '');
+    const pageId = file.replace(/\.md$/, '').replace(/(^|\/)index$/, '');
+    const id = [urlPrefix, pageId].filter(Boolean).join('/');
     const topLevel = id.split('/')[0] || 'index';
 
     if (reserved.includes(topLevel)) {
-      throw new Error(`pages/${file}: "${topLevel}" is reserved, please rename the page.`);
+      throw new Error(`${label}/${file}: "${topLevel}" is reserved, please rename the page.`);
     }
 
     const basePath = '../'.repeat(id.split('/').length);
@@ -348,13 +374,89 @@ function readPages() {
       basePath,
       title: meta.title || folderToTitle(id.split('/').pop()),
       icon: meta.icon || '',
-      descriptionHtml: renderPageMarkdown(body, basePath, linkBoxes),
+      descriptionHtml: renderPageMarkdown(body, basePath, { linkBoxes }),
     };
   });
 }
 
 /* ------------------------------------------------------------------ */
-/*  5. Generate HTML pages                                             */
+/*  5. Read tutorials (Jupyter notebooks)                              */
+/* ------------------------------------------------------------------ */
+
+/** Join a notebook cell's source, which may be a string or a list of lines. */
+function cellSource(cell) {
+  return Array.isArray(cell.source) ? cell.source.join('') : cell.source || '';
+}
+
+function readTutorials() {
+  if (!fs.existsSync(TUTORIALS_DIR)) return [];
+
+  const seen = new Set();
+
+  return fs
+    .readdirSync(TUTORIALS_DIR, { recursive: true })
+    .filter((f) => f.endsWith('.ipynb'))
+    .map((f) => f.split(path.sep).join('/'))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    .map((file) => {
+      /* "python/01-strings.ipynb" → "python/strings" (the number only sets the order) */
+      const folder = path.posix.dirname(file);
+      const slug = path.posix.basename(file, '.ipynb').replace(/^\d+-/, '');
+      const id = folder === '.' ? slug : `${folder}/${slug}`;
+      if (seen.has(id)) {
+        throw new Error(`tutorials/${file}: another notebook already uses the URL "${id}".`);
+      }
+      seen.add(id);
+
+      const basePath = '../'.repeat(id.split('/').length + 1);
+      const notebook = JSON.parse(fs.readFileSync(path.join(TUTORIALS_DIR, file), 'utf-8'));
+      const firstMarkdown = notebook.cells.findIndex((c) => c.cell_type === 'markdown');
+      const attachments = [];
+      let title = null;
+
+      const cells = notebook.cells
+        .map((cell, index) => {
+          let source = cellSource(cell);
+
+          if (cell.cell_type === 'code') {
+            return {
+              type: 'code',
+              key: cell.id || `cell-${index}`, /* localStorage key for saved code */
+              code: source,
+              readOnly: cell.metadata?.editable === false,
+            };
+          }
+          if (cell.cell_type !== 'markdown') return null;
+
+          /* The notebook's first "# Heading" becomes the page title */
+          if (index === firstMarkdown) {
+            const h1 = source.match(/^#\s+(.+)$/m);
+            if (h1) {
+              title = h1[1].trim();
+              source = source.replace(h1[0], '');
+            }
+          }
+
+          /* Embedded images → separate files next to the page */
+          for (const [name, data] of Object.entries(cell.attachments || {})) {
+            const [base64] = Object.values(data);
+            attachments.push({ name, content: Buffer.from(base64, 'base64') });
+            source = source.split(`attachment:${name}`).join(`${TUTORIALS_URL}/${id}/${name}`);
+          }
+
+          return {
+            type: 'markdown',
+            html: renderPageMarkdown(source, basePath, { headingIds: true }),
+          };
+        })
+        .filter(Boolean);
+
+      return { id, folder, basePath, title: title || folderToTitle(slug), cells, attachments };
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/*  6. Generate HTML pages                                             */
 /* ------------------------------------------------------------------ */
 
 function generateExercisePages(exercises) {
@@ -524,6 +626,57 @@ function copyPublic() {
   console.log('  ✓ Public files copied');
 }
 
+/** Embed JSON in a <script> tag without letting "</script>" end it. */
+function scriptJson(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c');
+}
+
+function generateTutorialPages(tutorials) {
+  const template = fs.readFileSync(
+    path.join(TEMPLATES_DIR, 'tutorial.html'),
+    'utf-8',
+  );
+
+  tutorials.forEach((tut, i) => {
+    /* Markdown cells are rendered here; code cells are placeholders that
+       tutorial-page.js fills with an editor, Run button and output. */
+    let codeIndex = 0;
+    const cellsHtml = tut.cells
+      .map((cell) => (cell.type === 'markdown'
+        ? `<div class="nb-markdown">${cell.html}</div>`
+        : `<div class="nb-code" data-cell="${codeIndex++}"></div>`))
+      .join('\n      ');
+
+    const json = scriptJson({
+      id: tut.id,
+      basePath: tut.basePath,
+      cells: tut.cells
+        .filter((c) => c.type === 'code')
+        .map(({ key, code, readOnly }) => ({ key, code, readOnly })),
+    });
+
+    /* "Next" links stay within the same folder (e.g. tutorials/python/) */
+    const next = tutorials[i + 1]?.folder === tut.folder ? tutorials[i + 1] : null;
+    const nextLink = next
+      ? `<a class="btn btn-primary" href="../${next.id.split('/').pop()}/">Next: ${escapeHtml(next.title)} →</a>`
+      : '';
+
+    const html = template
+      .replace(/\{\{TITLE\}\}/g, escapeHtml(tut.title))
+      .replace('{{CELLS_HTML}}', () => cellsHtml)
+      .replace('{{NEXT_LINK}}', () => nextLink)
+      .replace('{{TUTORIAL_DATA}}', () => json)
+      .replace(/\{\{BASE\}\}/g, tut.basePath);
+
+    const dir = path.join(DIST, TUTORIALS_URL, tut.id);
+    mkDir(dir);
+    fs.writeFileSync(path.join(dir, 'index.html'), html);
+    for (const file of tut.attachments) {
+      fs.writeFileSync(path.join(dir, file.name), file.content);
+    }
+  });
+}
+
 function generateIndexPage(assignments, exercises) {
   const template = fs.readFileSync(
     path.join(TEMPLATES_DIR, 'index.html'),
@@ -552,7 +705,7 @@ function escapeHtml(str) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  6. Copy Pyodide runtime                                            */
+/*  7. Copy Pyodide runtime                                            */
 /* ------------------------------------------------------------------ */
 
 function copyPyodide() {
@@ -578,12 +731,13 @@ function copyPyodide() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  7. Bundle JS / CSS with Vite                                       */
+/*  8. Bundle JS / CSS with Vite                                       */
 /* ------------------------------------------------------------------ */
 
 async function bundle() {
   await viteBuild({
     configFile: path.join(__dirname, 'vite.config.js'),
+    publicDir: false, /* public/ is copied to the dist/ root by copyPublic() */
     logLevel: 'warn',
   });
   console.log('  ✓ JS & CSS bundled');
@@ -604,9 +758,10 @@ async function main() {
   const exercises = readExercises();
   const assignments = readAssignments(exercises);
   const exams = readExams();
-  const pages = readPages();
+  const pages = [...readPages(), ...readPages(TUTORIALS_DIR, TUTORIALS_URL)];
+  const tutorials = readTutorials();
   console.log(
-    `  Found ${exercises.length} exercise(s), ${assignments.length} assignment(s), ${exams.length} exam(s), ${pages.length} page(s)`,
+    `  Found ${exercises.length} exercise(s), ${assignments.length} assignment(s), ${exams.length} exam(s), ${pages.length} page(s), ${tutorials.length} tutorial(s)`,
   );
 
   /* Bundle JS/CSS first (outputs to dist/assets/) */
@@ -621,6 +776,7 @@ async function main() {
   generateAssignmentPages(assignments);
   generateExamPages(exams);
   generatePages(pages);
+  generateTutorialPages(tutorials);
   generateIndexPage(assignments, exercises);
 
   /* Copy service worker to dist root (for exam offline support) */

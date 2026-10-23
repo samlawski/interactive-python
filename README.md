@@ -1,6 +1,6 @@
 # Python Exercises
 
-A static site of beginner Python exercises, assignments, exams and pages. Python runs in the browser with [Pyodide](https://pyodide.org).
+A static site of beginner Python exercises, assignments, exams, interactive tutorials and pages. Python runs in the browser with [Pyodide](https://pyodide.org).
 
 ```bash
 npm install
@@ -16,6 +16,8 @@ npm run preview  # serves dist/ locally
 | `assignments/<slug>.md` | `/assignments/<slug>/` | see below |
 | `exams/<slug>.md` | `/exams/<slug>/` | none (`# Title`, then tasks separated by `---`) |
 | `pages/<path>.md` | `/<path>/` | see below |
+| `tutorials/<topic>/<NN>-<slug>.ipynb` | `/tutorials/<topic>/<slug>/` | none (Jupyter notebook) |
+| `tutorials/<topic>/index.md` | `/tutorials/<topic>/` | same as pages |
 | `public/` | copied as-is to `/` | — |
 
 ## Frontmatter reference
