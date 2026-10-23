@@ -1,6 +1,6 @@
 # Python Exercises
 
-A static site of beginner Python exercises, assignments and exams for students at CODE. Python runs **in the browser** through Pyodide (WebAssembly). Students edit code in CodeMirror, run it, and test it against `test.py`. Progress is saved in `localStorage`. Exams have to work with **WiFi turned off**.
+A static site of beginner Python exercises, assignments, exams and content pages for students at CODE. Python runs **in the browser** through Pyodide (WebAssembly). Students edit code in CodeMirror, run it, and test it against `test.py`. Progress is saved in `localStorage`. Exams have to work with **WiFi turned off**.
 
 These instructions apply to any AI coding agent or assistant working in this repository.
 
@@ -14,10 +14,11 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ## Architecture
 
-- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/` and `pages/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
+- `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/` and `pages/`, copies `public/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js` and `404.html`.
 - `vite.config.js`: one entry per page type (`exercise-page`, `assignment-page`, `index-page`, `exam-page`). Vite is used only as a bundler, called from `build.js`, never as a dev server.
 - `src/js/`: ES modules, one `*-page.js` per page type plus shared modules (`python-runner`, `editor`, `terminal`, `storage`, `integrity`).
 - `src/sw.js`: service worker. It precaches Pyodide (cache-first) and serves everything else network-first with a cache fallback. Bump `CACHE` whenever the caching behavior or precache list changes.
+- `pages/` and `public/`: static content pages and the files they reference (see Content conventions).
 - `dist/`: build output, gitignored. Never edit it by hand.
 - `_draft/`: gitignored scratch material. Don't read or rely on it unless asked.
 
@@ -46,24 +47,22 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 ### Assignments (`assignments/*.md`) and exams (`exams/*.md`)
 
-- YAML-ish frontmatter (`title`, `exercises:` list of folder names) parsed by the custom `parseFrontmatter` in `build.js`. It supports scalars, `- item` lists and lists of flat `key: value` objects (see Pages) only, so don't use deeper nesting, multi-line values or other YAML features.
+- YAML-ish frontmatter (`title`, `exercises:` list of folder names) parsed by the custom `parseFrontmatter` in `build.js`. It supports scalars and `- item` lists only, so don't use nested YAML.
 - Exams are added before an exam session and removed afterwards (see the git history). Don't add or remove exams unless asked.
 
-### Pages (`pages/<slug>.md`)
+### Pages (`pages/**/*.md`)
 
-- Static pages served from the site root: `pages/os01.md` → `/os01/`. Slugs must not clash with top-level build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `sw`); the build fails if they do.
-- Same format as assignments: frontmatter, then a Markdown body (raw HTML allowed) shown at the top of the page.
-- `links:` is an optional list of link boxes, shown as a two-column grid below the body (one column on small screens). Each item needs `title` and `url`; `description` is optional and supports inline Markdown only (bold, italics, code; no links, since the whole box is already a link):
+- Static pages served from the site root: `pages/os01.md` → `/os01/`. Sub-folders nest: `pages/se19/index.md` → `/se19/`, `pages/se19/1-html.md` → `/se19/1-html/`. Top-level names must not clash with the build output (`index`, `404`, `assets`, `pyodide`, `exercises`, `assignments`, `exams`, `sw`) or with anything in `public/`; the build fails if they do.
+- Frontmatter: `title`, optional `icon` (an emoji shown before the title), optional `link_boxes` (default `false`), optional `redirect`. Then a Markdown body (raw HTML allowed). `README.md` has the full frontmatter reference; keep it in sync when fields change.
+- **Link boxes:** on pages with `link_boxes: true`, a bullet list where every item is exactly one link with a description in the link title, `- [Title](url "description")`, renders as a single-column list of clickable boxes right where it stands. Lists with any other item stay normal lists. Without the flag, these lists render as normal links. There is no frontmatter link list; links always live in the Markdown.
+- Box descriptions support inline Markdown only (bold, italics, code; no links, since the whole box is already a link). All link boxes open in a new tab; `http(s)` links also get a ↗ after the title.
+- **URLs:** values with a scheme (`https://`, `mailto:`) are used as is. Anything else, in link boxes, other links and images alike, is relative to the site root (`assignments/os01-week-1/`, `random-files/x.png`, `./` for the home page) and resolved for the page's depth. Don't start internal links with `/`, because the site may be hosted in a subfolder. Raw HTML `<a>`/`<img>` tags are not rewritten.
+- **Redirects:** a page whose frontmatter has only `redirect: <url>` becomes an instant redirect (meta refresh plus a fallback link). The URL follows the same rules, e.g. `redirect: se456/`.
+- External links are fine here because students click them; pages still must not *load* anything from other origins (rule 4). Put images and downloads in `public/`.
 
-  ```yaml
-  links:
-    - title: Week 1 – Python Basics
-      url: assignments/os01-week-1/
-      description: Start here with **printing** and *variables*.
-  ```
+### Static files (`public/`)
 
-- `url` values with a scheme (`https://`, `mailto:`) are used as is. All link boxes open in a new tab; `http(s)` links also get a ↗ after the title. Anything else is relative to the site root (`assignments/os01-week-1/`, `./` for the home page). Don't start internal links with `/`, because the site may be hosted in a subfolder.
-- External links are fine here because students click them; pages still must not *load* anything from other origins (rule 4).
+- Everything in `public/` is copied as-is to the root of `dist/` (`public/random-files/x.pdf` → `/random-files/x.pdf`). Use it for images and downloads referenced by pages.
 
 ### Tone
 

@@ -6,8 +6,8 @@
    Usage:   node build.js
    Output:  dist/
 
-   Reads exercises/, assignments/, exams/ and pages/, renders Markdown, bundles JS/CSS
-   with Vite, copies Pyodide files, and produces a fully self-contained
+   Reads exercises/, assignments/, exams/ and pages/, renders Markdown,
+   bundles JS/CSS with Vite, copies Pyodide and public/ files, and produces a fully self-contained
    static site ready for deployment.
    =================================================================== */
 
@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build as viteBuild } from 'vite';
-import { marked } from 'marked';
+import { marked, Marked } from 'marked';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,6 +25,7 @@ const EXERCISES_DIR = path.join(__dirname, 'exercises');
 const ASSIGNMENTS_DIR = path.join(__dirname, 'assignments');
 const EXAMS_DIR = path.join(__dirname, 'exams');
 const PAGES_DIR = path.join(__dirname, 'pages');
+const PUBLIC_DIR = path.join(__dirname, 'public');
 const TEMPLATES_DIR = path.join(__dirname, 'src', 'templates');
 
 /* ------------------------------------------------------------------ */
@@ -54,12 +55,7 @@ function readOpt(filePath) {
 
 /**
  * Parse simple YAML-ish frontmatter delimited by `---`.
- * Supports scalar values, arrays (lines starting with `  - `) and
- * arrays of objects:
- *
- *   links:
- *     - title: Python docs
- *       url: https://docs.python.org
+ * Supports scalar values and arrays (lines starting with `  - `).
  *
  * Returns { meta: {…}, body: "…" }
  */
@@ -69,44 +65,24 @@ function parseFrontmatter(text) {
 
   const meta = {};
   let currentKey = null;
-  let currentItem = null; /* object being filled by indented "key: value" lines */
 
   for (const line of match[1].split(/\r?\n/)) {
     const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
-    const itemMatch = line.match(/^\s+-\s+(.*)/);
-    const itemKvMatch = itemMatch?.[1].match(/^(\w[\w-]*):(?:\s+(.*)|$)/);
-    const nestedKvMatch = line.match(/^\s+(\w[\w-]*):(?:\s+(.*)|$)/);
-
     if (kvMatch) {
       currentKey = kvMatch[1];
-      currentItem = null;
       const val = kvMatch[2].trim();
       if (val) {
         meta[currentKey] = val;
       } else {
         meta[currentKey] = []; /* will be filled by "- " lines */
       }
-    } else if (currentKey && itemKvMatch) {
+    } else if (currentKey && line.match(/^\s+-\s+/)) {
       if (!Array.isArray(meta[currentKey])) meta[currentKey] = [];
-      currentItem = { [itemKvMatch[1]]: unquote(itemKvMatch[2]) };
-      meta[currentKey].push(currentItem);
-    } else if (currentKey && itemMatch) {
-      if (!Array.isArray(meta[currentKey])) meta[currentKey] = [];
-      currentItem = null;
-      meta[currentKey].push(itemMatch[1].trim());
-    } else if (currentItem && nestedKvMatch) {
-      currentItem[nestedKvMatch[1]] = unquote(nestedKvMatch[2]);
+      meta[currentKey].push(line.replace(/^\s+-\s+/, '').trim());
     }
   }
 
   return { meta, body: match[2] };
-}
-
-/** Trim a frontmatter value and strip one pair of surrounding quotes. */
-function unquote(val = '') {
-  const trimmed = val.trim();
-  const quoted = trimmed.match(/^(["'])(.*)\1$/);
-  return quoted ? quoted[2] : trimmed;
 }
 
 /** Convert a folder name like "1-1-hello-world" to a readable title. */
@@ -265,40 +241,116 @@ const RESERVED_PAGE_IDS = [
   'index', '404', 'assets', 'pyodide', 'exercises', 'assignments', 'exams', 'sw',
 ];
 
+/**
+ * Resolve a link URL for a page at `basePath`. URLs with a scheme
+ * (https:, mailto:, …), absolute paths and anchors are kept as they
+ * are; anything else is treated as relative to the site root.
+ */
+function resolveLinkUrl(url, basePath) {
+  if (/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(url)) return url;
+  return basePath + url.replace(/^\.\//, '');
+}
+
+/** Render one clickable link box (used by link grids on pages). */
+function linkBoxHtml({ titleHtml, href, descriptionHtml }) {
+  const external = /^https?:/i.test(href);
+  return `<a class="link-box" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+          <span class="link-box-title">${titleHtml}${external ? ' ↗' : ''}</span>
+          ${descriptionHtml ? `<span class="link-box-description">${descriptionHtml}</span>` : ''}
+        </a>`;
+}
+
+/**
+ * If a list item contains nothing but one link with a title, e.g.
+ * `- [Title](url "description")`, return that link token.
+ */
+function getDescribedLink(item) {
+  if (item.tokens.length !== 1) return null;
+  const inline = (item.tokens[0].tokens || []).filter(
+    (t) => !(t.type === 'text' && !t.text.trim()),
+  );
+  const [link] = inline;
+  return inline.length === 1 && link.type === 'link' && link.title ? link : null;
+}
+
+/**
+ * Render a page's Markdown. Relative links and images resolve against
+ * the site root, and (if `linkBoxes` is true) lists made only of
+ * described links (`- [Title](url "description")`) become link boxes.
+ */
+function renderPageMarkdown(md, basePath, linkBoxes = false) {
+  const pageMarked = new Marked({ breaks: false, gfm: true });
+
+  pageMarked.use({
+    walkTokens(token) {
+      if (token.type === 'link' || token.type === 'image') {
+        token.href = resolveLinkUrl(token.href, basePath);
+      }
+    },
+    renderer: {
+      list(token) {
+        const links = token.items.map(getDescribedLink);
+        if (!linkBoxes || token.ordered || links.some((l) => !l)) return false;
+
+        const boxes = links.map((link) => linkBoxHtml({
+          titleHtml: this.parser.parseInline(link.tokens),
+          href: link.href,
+          descriptionHtml: marked.parseInline(link.title),
+        }));
+        return `<div class="link-grid">\n        ${boxes.join('\n        ')}\n</div>\n`;
+      },
+    },
+  });
+
+  return pageMarked.parse(md);
+}
+
+/** List all .md files below a directory as sorted, `/`-separated paths. */
+function listMarkdownFiles(dir) {
+  return fs
+    .readdirSync(dir, { recursive: true })
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.split(path.sep).join('/'))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
 function readPages() {
   if (!fs.existsSync(PAGES_DIR)) return [];
 
-  return fs
-    .readdirSync(PAGES_DIR)
-    .filter((f) => f.endsWith('.md'))
-    .sort()
-    .map((file) => {
-      const raw = fs.readFileSync(path.join(PAGES_DIR, file), 'utf-8');
-      const { meta, body } = parseFrontmatter(raw);
-      const id = file.replace(/\.md$/, '');
+  const reserved = [
+    ...RESERVED_PAGE_IDS,
+    ...(fs.existsSync(PUBLIC_DIR) ? fs.readdirSync(PUBLIC_DIR) : []),
+  ];
 
-      if (RESERVED_PAGE_IDS.includes(id)) {
-        throw new Error(`pages/${file}: "${id}" is reserved, please rename the page.`);
-      }
+  return listMarkdownFiles(PAGES_DIR).map((file) => {
+    const raw = fs.readFileSync(path.join(PAGES_DIR, file), 'utf-8');
+    const { meta, body } = parseFrontmatter(raw);
 
-      const links = (meta.links || []).filter((l) => typeof l === 'object');
-      for (const link of links) {
-        if (!link.title || !link.url) {
-          throw new Error(`pages/${file}: every link needs a title and a url.`);
-        }
-      }
+    /* "os01.md" → "os01", "se19/index.md" → "se19", "se19/1-html.md" → "se19/1-html" */
+    const id = file.replace(/\.md$/, '').replace(/(^|\/)index$/, '');
+    const topLevel = id.split('/')[0] || 'index';
 
-      return {
-        id,
-        title: meta.title || folderToTitle(id),
-        descriptionHtml: renderMarkdown(body),
-        links: links.map((l) => ({
-          title: l.title,
-          url: l.url,
-          descriptionHtml: l.description ? marked.parseInline(l.description) : '',
-        })),
-      };
-    });
+    if (reserved.includes(topLevel)) {
+      throw new Error(`pages/${file}: "${topLevel}" is reserved, please rename the page.`);
+    }
+
+    const basePath = '../'.repeat(id.split('/').length);
+
+    if (meta.redirect) {
+      return { id, basePath, redirect: resolveLinkUrl(meta.redirect, basePath) };
+    }
+
+    /* Link boxes are off unless the page sets `link_boxes: true` */
+    const linkBoxes = /^(true|yes|on)$/i.test(meta.link_boxes || '');
+
+    return {
+      id,
+      basePath,
+      title: meta.title || folderToTitle(id.split('/').pop()),
+      icon: meta.icon || '',
+      descriptionHtml: renderPageMarkdown(body, basePath, linkBoxes),
+    };
+  });
 }
 
 /* ------------------------------------------------------------------ */
@@ -428,48 +480,48 @@ function generateExamPages(exams) {
   }
 }
 
-/**
- * Resolve a link URL for a page at `basePath`. URLs with a scheme
- * (https:, mailto:, …), absolute paths and anchors are kept as they
- * are; anything else is treated as relative to the site root.
- */
-function resolveLinkUrl(url, basePath) {
-  if (/^([a-z][a-z0-9+.-]*:|\/|#)/i.test(url)) return url;
-  return basePath + url.replace(/^\.\//, '');
-}
-
 function generatePages(pages) {
   const template = fs.readFileSync(
     path.join(TEMPLATES_DIR, 'page.html'),
     'utf-8',
   );
+  const redirectTemplate = fs.readFileSync(
+    path.join(TEMPLATES_DIR, 'redirect.html'),
+    'utf-8',
+  );
 
   for (const page of pages) {
-    const basePath = '../';
+    let html;
 
-    /* Build link grid HTML */
-    const linksHtml = page.links
-      .map((link) => {
-        const external = /^https?:/i.test(link.url);
-        return `<a class="link-box" href="${escapeHtml(resolveLinkUrl(link.url, basePath))}" target="_blank" rel="noopener">
-          <span class="link-box-title">${escapeHtml(link.title)}${external ? ' ↗' : ''}</span>
-          ${link.descriptionHtml ? `<span class="link-box-description">${link.descriptionHtml}</span>` : ''}
-        </a>`;
-      })
-      .join('\n        ');
+    if (page.redirect) {
+      /* Escape "<" so the URL can't close the inline <script> */
+      const urlJson = JSON.stringify(page.redirect).replace(/</g, '\\u003c');
+      html = redirectTemplate
+        .replace(/\{\{URL\}\}/g, () => escapeHtml(page.redirect))
+        .replace('{{URL_JSON}}', () => urlJson)
+        .replace(/\{\{BASE\}\}/g, page.basePath);
+    } else {
+      const heading = page.icon ? `${page.icon} ${page.title}` : page.title;
 
-    const html = template
-      .replace(/\{\{TITLE\}\}/g, escapeHtml(page.title))
-      .replace('{{DESCRIPTION_HTML}}', page.descriptionHtml)
-      .replace('{{DESCRIPTION_ATTR}}', page.descriptionHtml.trim() ? '' : 'style="display:none"')
-      .replace('{{LINKS_HTML}}', linksHtml)
-      .replace('{{LINKS_ATTR}}', page.links.length ? '' : 'style="display:none"')
-      .replace(/\{\{BASE\}\}/g, basePath);
+      html = template
+        .replace(/\{\{TITLE\}\}/g, escapeHtml(page.title))
+        .replace('{{HEADING}}', escapeHtml(heading))
+        .replace('{{DESCRIPTION_HTML}}', () => page.descriptionHtml) /* function: keeps "$" literal */
+        .replace('{{DESCRIPTION_ATTR}}', page.descriptionHtml.trim() ? '' : 'style="display:none"')
+        .replace(/\{\{BASE\}\}/g, page.basePath);
+    }
 
     const dir = path.join(DIST, page.id);
     mkDir(dir);
     fs.writeFileSync(path.join(dir, 'index.html'), html);
   }
+}
+
+/** Copy static files from public/ to the dist/ root as they are. */
+function copyPublic() {
+  if (!fs.existsSync(PUBLIC_DIR)) return;
+  fs.cpSync(PUBLIC_DIR, DIST, { recursive: true });
+  console.log('  ✓ Public files copied');
 }
 
 function generateIndexPage(assignments, exercises) {
@@ -560,8 +612,9 @@ async function main() {
   /* Bundle JS/CSS first (outputs to dist/assets/) */
   await bundle();
 
-  /* Copy Pyodide runtime */
+  /* Copy Pyodide runtime and static files */
   copyPyodide();
+  copyPublic();
 
   /* Generate HTML pages */
   generateExercisePages(exercises);
