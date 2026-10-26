@@ -9,8 +9,6 @@ You have 60 minutes to complete the exam and submit the assessment form before t
 - 👉 Some questions come with a code editor. You may **only** use it for that question. 
 - 👉 Feel free to raise your hand to ask any questions! ✋
 
-_(👀 Please be aware that leaving this page or turning on the WiFi will show up in the logs.)_
-
 Good luck, have fun!
 
 **When you're done**:
@@ -20,11 +18,15 @@ Good luck, have fun!
 - Now you may turn on your WiFi again. 
 - **On Fuxam**, upload the file you just downloaded as submission for the **OS_01 assessment**.
 
+_(👀 Please be aware that leaving this page or turning on the WiFi will be visible to the assessor.)_
+
 >🦊 **How to submit on Fuxam**:
 >1. On your Dashboard click on "Study Plan" (at the top). 
 >2. Open the program view and click "OS_01: [...]"
->3. On the "Assessment (Pass/Fail)"" tab (at the top), open the "**Custom Form**"
+>3. On the "Assessment (Pass/Fail)" tab (at the top), open the "**Custom Form**"
 >4. Upload the downloaded file there. Then **scroll up** to hit the **Submit** button at the top right. 
+>
+>If you run into issues you can email the module coordinator at [mailto:samuel.boguslawski@code.berlin](samuel.boguslawski@code.berlin)
 
 ---
 
