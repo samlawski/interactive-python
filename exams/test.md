@@ -22,8 +22,8 @@ _(👀 Please be aware that leaving this page or turning on the WiFi will be vis
 
 >🦊 **How to submit on Fuxam**:
 >1. On your Dashboard click on "Study Plan" (at the top). 
->2. Open the program view and click "OS_01: [...]"
->3. On the "Assessment (Pass/Fail)" tab (at the top), open the "**Custom Form**"
+>2. Open the program view with the little arrow on the right and click "OS_01: [...]".
+>3. On the "Assessment (Pass/Fail)" tab (at the top), open the "**Custom Form**" with the little arrow.
 >4. Upload the downloaded file there. Then **scroll up** to hit the **Submit** button at the top right. 
 >
 >If you run into issues you can email the module coordinator at [samuel.boguslawski@code.berlin](mailto:samuel.boguslawski@code.berlin)
