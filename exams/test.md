@@ -26,7 +26,7 @@ _(👀 Please be aware that leaving this page or turning on the WiFi will be vis
 >3. On the "Assessment (Pass/Fail)" tab (at the top), open the "**Custom Form**"
 >4. Upload the downloaded file there. Then **scroll up** to hit the **Submit** button at the top right. 
 >
->If you run into issues you can email the module coordinator at [mailto:samuel.boguslawski@code.berlin](samuel.boguslawski@code.berlin)
+>If you run into issues you can email the module coordinator at [samuel.boguslawski@code.berlin](mailto:samuel.boguslawski@code.berlin)
 
 ---
 
