@@ -5,7 +5,8 @@
    - Renders exam tasks with textareas or code editors
    - Code blocks rendered as canvas images (unselectable)
    - Independent editor/terminal pairs per task
-   - Download answers as Markdown
+   - Download answers as Markdown, or submit them to a backend
+     (see submission/index.js) when one is configured
    - Copy/paste protection
    - Service worker registration for offline support
    =================================================================== */
@@ -16,6 +17,12 @@ import { createEditor, getCode } from './editor.js';
 import { Terminal } from './terminal.js';
 import { initPyodide, runCode } from './python-runner.js';
 import { hmacHash } from './integrity.js';
+import {
+  isSubmissionEnabled,
+  getPrivacyPolicyUrl,
+  submitAnswers,
+  SubmissionError,
+} from './submission/index.js';
 
 /* ------------------------------------------------------------------ */
 /*  Bootstrap                                                          */
@@ -372,26 +379,113 @@ warningModal.addEventListener('click', (e) => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Download answers as Markdown                                       */
-/* ------------------------------------------------------------------ */
-
-/* ------------------------------------------------------------------ */
-/*  Email prompt for download                                          */
+/*  Email prompt for submit / download                                 */
 /* ------------------------------------------------------------------ */
 
 const emailModal = document.getElementById('email-modal');
 const emailInput = document.getElementById('email-input');
+const emailConfirm = document.getElementById('email-confirm');
+const emailCancel = document.getElementById('email-cancel');
+const downloadLink = document.getElementById('email-download-link');
+const submitStatus = document.getElementById('submit-status');
+
+const SUBMIT_RECEIPT_KEY = `exam-${data.id}-submitted`;
+const submissionEnabled = isSubmissionEnabled();
+
+let isOnline = false;
+let submitting = false;
 
 /* Restore previously entered email */
 const savedEmail = localStorage.getItem(`exam-${data.id}-email`);
 if (savedEmail) emailInput.value = savedEmail;
 
+/* With a submission backend: Submit is the main action, download a link */
+if (submissionEnabled) {
+  document.getElementById('email-text').textContent =
+    'Enter your email, then submit your answers. You need to be online to submit.';
+  emailConfirm.textContent = 'Submit';
+  downloadLink.classList.remove('hidden');
+  document.getElementById('submit-fine-print').classList.remove('hidden');
+  const privacyUrl = getPrivacyPolicyUrl();
+  if (privacyUrl) {
+    document.getElementById('privacy-link').href = privacyUrl;
+  } else {
+    document.getElementById('privacy-link-wrap').remove();
+  }
+  ['download-top-btn', 'download-bottom-btn'].forEach((id) => {
+    document.getElementById(id).textContent = '📤 Submit My Answers';
+  });
+}
+
+/** Return the trimmed email, or null (and focus the field) if empty. */
+function readEmail() {
+  const email = emailInput.value.trim();
+  if (!email) {
+    emailInput.focus();
+    return null;
+  }
+  localStorage.setItem(`exam-${data.id}-email`, email);
+  return email;
+}
+
+/** Show a status line in the modal: kind is offline | pending | success | error. */
+function showSubmitStatus(kind, message) {
+  submitStatus.className = `submit-status submit-status-${kind}`;
+  submitStatus.textContent = message;
+}
+
+function hideSubmitStatus() {
+  submitStatus.className = 'submit-status hidden';
+  submitStatus.textContent = '';
+}
+
+/** Return the receipt of the last successful submission, or null. */
+function getLastReceipt() {
+  return JSON.parse(localStorage.getItem(SUBMIT_RECEIPT_KEY) || 'null');
+}
+
+/** Describe a receipt for the student, e.g. "at 14:32 (receipt #42)". */
+function describeReceipt(receipt) {
+  const time = new Date(receipt.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return `at ${time}${receipt.id ? ` (receipt #${receipt.id})` : ''}`;
+}
+
+/** Show the receipt of the last successful submission, if any. */
+function showLastReceipt() {
+  const receipt = getLastReceipt();
+  if (!receipt) return false;
+  showSubmitStatus('success', `✅ Submitted ${describeReceipt(receipt)}.`);
+  return true;
+}
+
+/** Enable Submit only while online; explain why it is disabled. */
+function updateSubmitAvailability() {
+  if (!submissionEnabled || submitting) return;
+  emailConfirm.disabled = !isOnline;
+  if (!isOnline) {
+    showSubmitStatus('offline', '📡 You are offline. Turn on your WiFi to submit.');
+  } else if (submitStatus.classList.contains('submit-status-offline')) {
+    if (!showLastReceipt()) hideSubmitStatus();
+  }
+}
+
+/** Called by the connectivity check whenever it has a result. */
+function onConnectivityChange(online) {
+  isOnline = online;
+  updateSubmitAvailability();
+}
+
 function promptAndDownload() {
   emailModal.classList.remove('hidden');
+  if (submissionEnabled && !submitting) {
+    if (!showLastReceipt()) hideSubmitStatus();
+    updateSubmitAvailability();
+    checkConnectivity();
+  }
   emailInput.focus();
 }
 
-document.getElementById('email-cancel').addEventListener('click', () => {
+emailCancel.addEventListener('click', () => {
   emailModal.classList.add('hidden');
 });
 
@@ -399,16 +493,96 @@ emailModal.addEventListener('click', (e) => {
   if (e.target === emailModal) emailModal.classList.add('hidden');
 });
 
-document.getElementById('email-confirm').addEventListener('click', () => {
-  const email = emailInput.value.trim();
-  if (!email) {
-    emailInput.focus();
-    return;
+emailConfirm.addEventListener('click', () => {
+  const email = readEmail();
+  if (!email) return;
+  if (submissionEnabled) {
+    const receipt = getLastReceipt();
+    if (receipt) {
+      confirmResubmit(email, receipt);
+    } else {
+      submitToBackend(email);
+    }
+  } else {
+    emailModal.classList.add('hidden');
+    downloadAnswers(email);
   }
-  localStorage.setItem(`exam-${data.id}-email`, email);
+});
+
+downloadLink.addEventListener('click', () => {
+  const email = readEmail();
+  if (!email) return;
   emailModal.classList.add('hidden');
   downloadAnswers(email);
 });
+
+/* --- Resubmit confirmation --------------------------------------- */
+
+const resubmitModal = document.getElementById('resubmit-modal');
+let pendingResubmitEmail = null;
+
+/** Ask before sending a second version after a successful submission. */
+function confirmResubmit(email, receipt) {
+  if (submitting) return;
+  pendingResubmitEmail = email;
+  document.getElementById('resubmit-message').textContent =
+    `You already submitted your answers successfully ${describeReceipt(receipt)}.`;
+  resubmitModal.classList.remove('hidden');
+  document.getElementById('resubmit-cancel').focus();
+}
+
+function closeResubmit() {
+  pendingResubmitEmail = null;
+  resubmitModal.classList.add('hidden');
+}
+
+document.getElementById('resubmit-cancel').addEventListener('click', closeResubmit);
+
+resubmitModal.addEventListener('click', (e) => {
+  if (e.target === resubmitModal) closeResubmit();
+});
+
+document.getElementById('resubmit-confirm').addEventListener('click', () => {
+  const email = pendingResubmitEmail;
+  closeResubmit();
+  if (email) submitToBackend(email);
+});
+
+/** Send the answers to the submission backend and show the outcome. */
+async function submitToBackend(email) {
+  if (submitting) return;
+  submitting = true;
+  emailConfirm.disabled = true;
+  showSubmitStatus('pending', '⏳ Submitting your answers…');
+
+  try {
+    const { md, hash, timestamp } = await buildAnswers(email, 'Content submitted');
+    const receipt = await submitAnswers({
+      examId: data.id,
+      email,
+      integrity: hash,
+      submittedAt: timestamp,
+      content: md,
+    });
+    localStorage.setItem(
+      SUBMIT_RECEIPT_KEY,
+      JSON.stringify({ id: receipt.id, at: new Date().toISOString() }),
+    );
+    logEvent(`Submission confirmed${receipt.id ? ` (receipt #${receipt.id})` : ''}`);
+    showLastReceipt();
+    emailCancel.textContent = 'Close';
+  } catch (err) {
+    logEvent('Submission failed');
+    console.error(err);
+    const message = err instanceof SubmissionError
+      ? err.message
+      : 'Something went wrong while submitting.';
+    showSubmitStatus('error', `❌ ${message} If it keeps failing, download a copy instead and email it to the assessor.`);
+  } finally {
+    submitting = false;
+    updateSubmitAvailability();
+  }
+}
 
 /* Allow Enter to confirm */
 emailInput.addEventListener('keydown', (e) => {
@@ -436,6 +610,13 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
+  /* Resubmit modal (sits above the email modal): Escape cancels.
+     Enter is left to the focused button, which defaults to Cancel. */
+  if (!resubmitModal.classList.contains('hidden')) {
+    if (e.key === 'Escape') closeResubmit();
+    return;
+  }
+
   /* Email modal: Escape closes without action */
   if (!emailModal.classList.contains('hidden')) {
     if (e.key === 'Escape') {
@@ -446,7 +627,17 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-async function downloadAnswers(email) {
+/* ------------------------------------------------------------------ */
+/*  Answers as Markdown (download + submit)                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Build the answers Markdown with its integrity hash. Download and
+ * submit both use this, so a submission is exactly the file a download
+ * at that moment would produce. `logLabel` is only added to the
+ * activity log. Returns { md, hash, timestamp }.
+ */
+async function buildAnswers(email, logLabel) {
   let md = `# ${data.title}\n\n`;
   md += `**Email:** ${email}\n\n`;
   const now = new Date();
@@ -478,7 +669,7 @@ async function downloadAnswers(email) {
     md += '---\n\n';
   }
 
-  logEvent('Content downloaded');
+  logEvent(logLabel);
 
   md += '## Activity Log\n\n';
   md += '| # | Timestamp | Event |\n';
@@ -492,6 +683,13 @@ async function downloadAnswers(email) {
   const hash = await hmacHash(md);
   const integrityLine = `**Integrity:** ${hash}\n\n`;
   md = md.slice(0, integrityInsertPos) + integrityLine + md.slice(integrityInsertPos);
+
+  return { md, hash, timestamp: now.toISOString() };
+}
+
+/** Download the answers as a Markdown file. */
+async function downloadAnswers(email) {
+  const { md } = await buildAnswers(email, 'Content downloaded');
 
   /* Sanitise email for filename */
   const safeEmail = email.replace(/[^a-zA-Z0-9@._-]/g, '_');
@@ -695,6 +893,7 @@ function setOnlineStatus(online) {
     }
     lastOnlineState = online;
   }
+  onConnectivityChange(online);
   if (online) {
     onlineBorder.classList.add('visible');
     onlineIndicator.className = 'online-indicator online';

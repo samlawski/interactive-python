@@ -17,6 +17,7 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 - `build.js`: a hand-written static-site generator. It reads `exercises/`, `assignments/`, `exams/`, `pages/` and `tutorials/`, copies `public/`, renders Markdown with `marked`, fills the `src/templates/*.html` placeholders (`{{...}}`), bundles the JS/CSS with Vite, copies Pyodide from `node_modules/pyodide` into `dist/pyodide/`, and copies `sw.js`, `404.html` and `kitchen-sink.html` (a design reference of every component, served unlinked at `/kitchen-sink/`; add new components to it).
 - `vite.config.js`: one entry per page type (`exercise-page`, `assignment-page`, `index-page`, `exam-page`, `tutorial-page`). Vite is used only as a bundler, called from `build.js`, never as a dev server.
 - `src/js/`: ES modules, one `*-page.js` per page type plus shared modules (`python-runner`, `editor`, `terminal`, `storage`, `integrity`).
+- `src/js/submission/`: exam submission, kept separate from the rest of the app. `exam-page.js` only uses `index.js` (`isSubmissionEnabled`, `getPrivacyPolicyUrl`, `submitAnswers`, `SubmissionError`). Each backend is a provider module (`baserow.js`) with `isConfigured(options)` and `submit(submission, options, signal)`, chosen in `config.js`. Never import a provider directly from page code. To switch backends, add a provider instead of changing `exam-page.js`. See "Exam submission" in `README.md`.
 - `src/sw.js`: service worker. It precaches Pyodide (cache-first) and serves everything else network-first with a cache fallback. Bump `CACHE` whenever the caching behavior or precache list changes.
 - `pages/` and `public/`: static content pages and the files they reference (see Content conventions).
 - `dist/`: build output, gitignored. Never edit it by hand.
@@ -26,13 +27,14 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 1. **No new dependencies.** Don't add, upgrade, remove or swap npm packages, and don't add Python packages (no `micropip`), unless the user explicitly approves it. Don't run `npm install <pkg>`, `yarn add`, `pnpm add` or `pip install` without that approval. The runtime stack is fixed at CodeMirror 6, `@codemirror/lang-python`, `@codemirror/theme-one-dark`, `marked` and `pyodide`; the dev stack is Vite.
 2. **Vanilla only.** Plain ES modules and plain CSS. No frameworks (React/Vue/Svelte/Lit…), no TypeScript, no JSX, no CSS frameworks or preprocessors, no Tailwind, no state libraries.
-3. **Static only.** No backend, no server functions, no databases, no auth. The output is a folder of files that any static host can serve.
-4. **Offline-first, no external network at runtime.** No CDNs, web fonts, analytics, trackers, external images or `fetch` calls to other origins. Everything a page needs ships in `dist/`. Any change touching loading, assets or `sw.js` must keep exam pages working offline after the first load.
+3. **Static only.** No backend, no server functions, no databases, no auth. The output is a folder of files that any static host can serve. The exam submission backend (rule 10) is an external service, not part of the site; building and serving the site must never depend on it.
+4. **Offline-first, no external network at runtime.** No CDNs, web fonts, analytics, trackers, external images or `fetch` calls to other origins. Everything a page needs ships in `dist/`. Any change touching loading, assets or `sw.js` must keep exam pages working offline after the first load. **One exception:** `src/js/submission/` may send a POST to the single backend set in its `config.js`, and only when a student clicks Submit while online. Exams must still work fully offline. Submitting stays optional, and the download link must always work as a fallback.
 5. **Keep the build simple.** Extend `build.js` rather than adding build tools, plugins, task runners or config files. Don't add a Vite dev server workflow, linters or formatters unless asked.
-6. **Browser storage stays local.** Student progress lives in `localStorage` via `src/js/storage.js`. Don't add other storage mechanisms or send student data anywhere.
-7. **Exam integrity.** `HMAC_KEY` in `src/js/integrity.js` and `verify-exam.js` must stay identical. Don't change the key, the hash format or the `**Integrity:** <hash>` line format without asking, because that would invalidate every downloaded exam.
-8. **Ask before touching core config.** Get approval before editing `package.json`, `package-lock.json`, `vite.config.js`, `src/js/integrity.js` or `verify-exam.js`. Never edit `dist/` or `node_modules/`.
+6. **Browser storage stays local.** Student progress lives in `localStorage` via `src/js/storage.js`. Don't add other storage mechanisms or send student data anywhere. **One exception:** exam answers a student actively submits through `src/js/submission/`. Only send what the downloaded file contains (exam id, email, integrity hash, timestamp, the Markdown). Keep the privacy fine print and link in the submit dialog.
+7. **Exam integrity.** `HMAC_KEY` in `src/js/integrity.js` and `verify-exam.js` must stay identical. Don't change the key, the hash format or the `**Integrity:** <hash>` line format without asking, because that would invalidate every downloaded exam. Submitted answers must be the exact same Markdown as the download, so `verify-exam.js` works on both.
+8. **Ask before touching core config.** Get approval before editing `package.json`, `package-lock.json`, `vite.config.js`, `src/js/integrity.js`, `verify-exam.js` or `src/js/submission/config.js` (it holds the live backend token and table). Never edit `dist/` or `node_modules/`.
 9. **Don't add tooling to enforce these rules.** This file is the single source of project context and restrictions. Don't add agent-specific config folders, check scripts, git hooks or CI for it unless asked.
+10. **Submission backend safety.** Everything in `src/js/submission/config.js` ships to every browser. Only use tokens that can *create* submissions and cannot read, change or delete them. Never send test submissions to the live backend: test with a mocked `fetch`, or with a separate test table the user approved.
 
 ## Content conventions
 
@@ -49,6 +51,7 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 
 - YAML-ish frontmatter (`title`, `exercises:` list of folder names) parsed by the custom `parseFrontmatter` in `build.js`. It supports scalars and `- item` lists only, so don't use nested YAML.
 - Exams are added before an exam session and removed afterwards (see the git history). Don't add or remove exams unless asked.
+- When submission is set up, exam pages show "Submit My Answers", with a download link as fallback. The instructions in `exams/*.md` should match the method in use (submit vs. download and upload). Ask before changing exam wording.
 
 ### Pages (`pages/**/*.md`)
 

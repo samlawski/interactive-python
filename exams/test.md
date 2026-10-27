@@ -16,17 +16,9 @@ Good luck, have fun!
 - Please click "Download My Answers" to download your work and enter your CODE email address.
 - ✋ Raise your hand to indicate that you're done. 
 - Now you may turn on your WiFi again. 
-- **On Fuxam**, upload the file you just downloaded as submission for the **OS_01 assessment**.
+- Submit your exam through the "Submit" button. _(If you run into any problems, you may also download the exam file and email it to [samuel.boguslawski@code.berlin](mailto:samuel.boguslawski@code.berlin))_
 
 _(👀 Please be aware that leaving this page or turning on the WiFi will be visible to the assessor.)_
-
->🦊 **How to submit on Fuxam**:
->1. On your Dashboard click on "Study Plan" (at the top). 
->2. Open the program view with the little arrow on the right and click "OS_01: [...]".
->3. On the "Assessment (Pass/Fail)" tab (at the top), open the "**Custom Form**" with the little arrow.
->4. Upload the downloaded file there. Then **scroll up** to hit the **Submit** button at the top right. 
->
->If you run into issues you can email the module coordinator at [samuel.boguslawski@code.berlin](mailto:samuel.boguslawski@code.berlin)
 
 ---
 

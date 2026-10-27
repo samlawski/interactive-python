@@ -244,6 +244,27 @@ What is your name? <input class="terminal-input-field" aria-label="Terminal inpu
       </div>
     </section>
 
+    <!-- Exam submit dialog ------------------------------------------- -->
+    <section class="ks-section">
+      <h2>Exam submit dialog</h2>
+      <div class="modal-backdrop ks-modal">
+        <div class="modal">
+          <h3>Enter your email address</h3>
+          <p>Enter your email, then submit your answers. You need to be online to submit.</p>
+          <input type="email" class="email-input" placeholder="your@email.com" aria-label="Email">
+          <p class="submit-status submit-status-offline">📡 You are offline. Turn on your WiFi to submit.</p>
+          <p class="submit-status submit-status-success">✅ Submitted at 14:32 (receipt #12).</p>
+          <p class="submit-status submit-status-error">❌ Could not reach the submission server. Check your WiFi and try again. If it keeps failing, download a copy instead and email it to the assessor.</p>
+          <div class="modal-actions">
+            <button class="btn btn-cancel">Cancel</button>
+            <button class="btn btn-primary" disabled>Submit</button>
+          </div>
+          <p class="modal-fine-print">Your submission will be uploaded to a database (<a href="#">privacy policy</a>) only visible to the assessors. If you disagree with the privacy policy, please download the file and email it to the module coordinator instead.</p>
+          <button class="btn-link modal-secondary-link">download your answers</button>
+        </div>
+      </div>
+    </section>
+
   </div>
 
   {{FOOTER}}

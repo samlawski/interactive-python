@@ -33,15 +33,35 @@
 
   {{FOOTER}}
 
-  <!-- Email prompt modal -->
+  <!-- Email prompt modal (download only; exam-page.js switches it to
+       submit + download link when submission is set up) -->
   <div id="email-modal" class="modal-backdrop hidden">
     <div class="modal">
       <h3>Enter your email address</h3>
-      <p>Please enter your email before downloading.</p>
+      <p id="email-text">Please enter your email before downloading.</p>
       <input id="email-input" type="email" class="email-input" placeholder="your@email.com" autocomplete="email">
+      <p id="submit-status" class="submit-status hidden" role="status"></p>
       <div class="modal-actions">
         <button id="email-cancel" class="btn btn-cancel">Cancel</button>
         <button id="email-confirm" class="btn btn-primary">Download</button>
+      </div>
+      <p id="submit-fine-print" class="modal-fine-print hidden">
+        Your submission will be uploaded to a private database<span id="privacy-link-wrap"> (<a id="privacy-link" target="_blank" rel="noopener">privacy policy</a>)</span>
+        only visible to the assessors. If you disagree with the privacy policy, please download the file and email it to the module coordinator instead.
+      </p>
+      <button id="email-download-link" class="btn-link modal-secondary-link hidden">download your answers</button>
+    </div>
+  </div>
+
+  <!-- Resubmit confirmation (shown above the email modal) -->
+  <div id="resubmit-modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <h3>You already submitted</h3>
+      <p id="resubmit-message">Your answers were already submitted successfully.</p>
+      <p>Do you want to submit a new version? Only your last submission before the deadline counts.</p>
+      <div class="modal-actions">
+        <button id="resubmit-cancel" class="btn btn-cancel">Cancel</button>
+        <button id="resubmit-confirm" class="btn btn-primary">Submit again</button>
       </div>
     </div>
   </div>
