@@ -29,6 +29,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const TUTORIALS_DIR = path.join(__dirname, 'tutorials');
 const TUTORIALS_URL = 'tutorials'; /* dist/ folder and URL of the tutorials */
 const TEMPLATES_DIR = path.join(__dirname, 'src', 'templates');
+const SITE_FILE = path.join(__dirname, 'site.json'); /* site-wide content settings */
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -641,19 +642,28 @@ function generatePages(pages) {
 }
 
 /**
- * Replace the {{FOOTER}} placeholder in every generated HTML file
- * (templates, 404.html and kitchen-sink.html) with src/templates/footer.html.
+ * Fill the site-wide placeholders in every generated HTML file
+ * (templates, 404.html and kitchen-sink.html): {{FOOTER}} with
+ * src/templates/footer.html, then {{site.<key>}} with the values from
+ * site.json. Throws on a {{site.<key>}} without a matching key.
  */
-function insertFooter() {
+function fillSitePlaceholders() {
   const footer = fs.readFileSync(path.join(TEMPLATES_DIR, 'footer.html'), 'utf-8').trim();
+  const site = JSON.parse(readOpt(SITE_FILE) || '{}');
 
   for (const file of fs.readdirSync(DIST, { recursive: true })) {
     if (!file.endsWith('.html') || file.startsWith(`pyodide${path.sep}`)) continue;
     const filePath = path.join(DIST, file);
     const html = fs.readFileSync(filePath, 'utf-8');
-    if (html.includes('{{FOOTER}}')) {
-      fs.writeFileSync(filePath, html.replace('{{FOOTER}}', () => footer));
-    }
+    const filled = html
+      .replace('{{FOOTER}}', () => footer)
+      .replace(/\{\{site\.(\w+)\}\}/g, (_, key) => {
+        if (typeof site[key] !== 'string') {
+          throw new Error(`Unknown placeholder {{site.${key}}} in dist/${file}: add "${key}" to site.json`);
+        }
+        return escapeHtml(site[key]);
+      });
+    if (filled !== html) fs.writeFileSync(filePath, filled);
   }
 }
 
@@ -836,8 +846,8 @@ async function main() {
     path.join(DIST, 'kitchen-sink', 'index.html'),
   );
 
-  /* Fine-print footer on every page */
-  insertFooter();
+  /* Fine-print footer and site.json values on every page */
+  fillSitePlaceholders();
 
   console.log('  ✓ HTML pages generated');
 

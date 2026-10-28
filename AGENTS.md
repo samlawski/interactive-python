@@ -19,6 +19,7 @@ There is no test suite for the JS. **Run `npm run build` after every change** to
 - `src/js/`: ES modules, one `*-page.js` per page type plus shared modules (`python-runner`, `editor`, `terminal`, `storage`, `integrity`).
 - `src/sw.js`: service worker. It precaches Pyodide (cache-first) and serves everything else network-first with a cache fallback. Bump `CACHE` whenever the caching behavior or precache list changes.
 - `pages/` and `public/`: static content pages and the files they reference (see Content conventions).
+- `site.json`: site-wide content settings as flat `"key": "text"` pairs (e.g. `exam_upload_url`). `build.js` fills `{{site.<key>}}` placeholders in every generated HTML file with them. Put URLs and texts that would otherwise be hard-coded in templates or JS here, and document new keys in `README.md`.
 - `dist/`: build output, gitignored. Never edit it by hand.
 - `_draft/`: gitignored scratch material. Don't read or rely on it unless asked.
 

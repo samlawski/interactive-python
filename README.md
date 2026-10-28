@@ -19,6 +19,16 @@ npm run preview  # serves dist/ locally
 | `tutorials/<topic>/<NN>-<slug>.ipynb` | `/tutorials/<topic>/<slug>/` | none (Jupyter notebook) |
 | `tutorials/<topic>/index.md` | `/tutorials/<topic>/` | same as pages |
 | `public/` | copied as-is to `/` | — |
+| `site.json` | — | site-wide settings, see below |
+
+## Site settings (`site.json`)
+
+Values used on many pages, such as the exam upload form, live in `site.json` as `"key": "text"` pairs. The build replaces every `{{site.<key>}}` in the templates (and in raw HTML inside content) with the value. A placeholder without a matching key fails the build.
+
+| Key | Description |
+| --- | --- |
+| `site_name` | Shown after the page title in the browser tab. |
+| `exam_upload_url` | Form students upload their exam answers to. Linked from the dialog after "Download My Answers". |
 
 ## Frontmatter reference
 
