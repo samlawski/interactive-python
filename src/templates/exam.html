@@ -39,10 +39,11 @@
       <h3>Enter your email address</h3>
       <p>Please enter your email before downloading.</p>
       <input id="email-input" type="email" class="email-input" placeholder="your@email.com" autocomplete="email">
-      <p>After downloading, upload the file in this <a href="{{site.exam_upload_url}}" target="_blank" rel="noopener">Google Form ↗</a>.</p>
+      <p>After downloading, upload the file in the Google Form.</p>
       <div class="modal-actions">
-        <button id="email-cancel" class="btn btn-cancel">Cancel</button>
+        <button id="email-cancel" class="btn btn-cancel">Close</button>
         <button id="email-confirm" class="btn btn-primary">Download</button>
+        <a href="{{site.exam_upload_url}}" class="btn btn-secondary" target="_blank" rel="noopener">Google Form ↗</a>
       </div>
     </div>
   </div>

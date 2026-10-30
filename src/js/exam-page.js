@@ -406,7 +406,7 @@ document.getElementById('email-confirm').addEventListener('click', () => {
     return;
   }
   localStorage.setItem(`exam-${data.id}-email`, email);
-  emailModal.classList.add('hidden');
+  /* Keep the modal open so students can go on to the Google Form */
   downloadAnswers(email);
 });
 

@@ -919,6 +919,7 @@ kbd {
 
 .modal-actions .btn {
   min-width: 90px;
+  white-space: nowrap;
 }
 
 .email-input {
