@@ -6,7 +6,7 @@
    - Code blocks rendered as canvas images (unselectable)
    - Independent editor/terminal pairs per task
    - Download answers as Markdown
-   - Copy/paste protection
+   - Copy/paste logging (with line counts) in the activity log
    - Service worker registration for offline support
    =================================================================== */
 
@@ -159,11 +159,8 @@ function buildTextarea(container, taskId) {
     autoExpand(textarea);
   });
 
-  /* Paste protection */
-  textarea.addEventListener('paste', (e) => {
-    e.preventDefault();
-    showWarning('paste');
-  });
+  /* Paste logging */
+  textarea.addEventListener('paste', (e) => logPaste(e, taskId));
 
   container.appendChild(textarea);
   autoExpand(textarea);
@@ -234,27 +231,8 @@ function buildEditorTerminal(container, taskId, starterCode) {
   editors[taskId] = editor;
   terminals[taskId] = new Terminal(termDiv);
 
-  /* Paste protection on editor (capture phase) */
-  editorDiv.addEventListener(
-    'paste',
-    (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      showWarning('paste');
-    },
-    true,
-  );
-
-  editorDiv.addEventListener(
-    'beforeinput',
-    (e) => {
-      if (e.inputType === 'insertFromPaste') {
-        e.preventDefault();
-        showWarning('paste');
-      }
-    },
-    true,
-  );
+  /* Paste logging on editor (capture phase, before CodeMirror handles it) */
+  editorDiv.addEventListener('paste', (e) => logPaste(e, taskId), true);
 }
 
 /* ------------------------------------------------------------------ */
@@ -328,48 +306,80 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Copy protection                                                    */
+/*  Copy / paste logging                                               */
 /* ------------------------------------------------------------------ */
 
-document.addEventListener('copy', (e) => {
-  e.preventDefault();
-  if (e.clipboardData) e.clipboardData.setData('text/plain', '');
-  showWarning('copy');
-});
+/**
+ * Count the lines in a piece of clipboard text. A single trailing
+ * newline does not count as an extra (empty) line.
+ * @param {string} text
+ * @returns {number}
+ */
+function countLines(text) {
+  if (!text) return 0;
+  return text.replace(/(\r\n|\r|\n)$/, '').split(/\r\n|\r|\n/).length;
+}
+
+/**
+ * Describe where an event happened, e.g. "in task-2" or "outside the tasks".
+ * @param {EventTarget} target
+ * @returns {string}
+ */
+function describeLocation(target) {
+  const el = target instanceof Element ? target : target?.parentElement;
+  const task = el?.closest('.exam-task');
+  return task ? `in ${task.dataset.taskId}` : 'outside the tasks';
+}
+
+/**
+ * Format a line/character count for the log, e.g. "3 lines (57 chars)".
+ * @param {string} text
+ * @returns {string}
+ */
+function describeAmount(text) {
+  const lines = countLines(text);
+  return `${lines} line${lines === 1 ? '' : 's'} (${text.length} chars)`;
+}
+
+/**
+ * Log a paste into an answer field. Pasting itself is allowed.
+ * @param {ClipboardEvent} e
+ * @param {string} taskId
+ */
+function logPaste(e, taskId) {
+  const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+  logEvent(`📋 Pasted ${describeAmount(text)} into ${taskId}`);
+}
+
+/**
+ * Log a copy or cut. Runs after CodeMirror's own handler has filled the
+ * clipboard, so its text is read first; plain page selections fall back
+ * to the DOM selection.
+ * @param {ClipboardEvent} e
+ * @param {string} verb
+ */
+function logCopy(e, verb) {
+  let text = '';
+  try {
+    text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+  } catch {
+    /* Some browsers don't allow reading during copy */
+  }
+  if (!text) text = String(window.getSelection() || '');
+  logEvent(`📋 ${verb} ${describeAmount(text)} ${describeLocation(e.target)}`);
+}
+
+document.addEventListener('copy', (e) => logCopy(e, 'Copied'));
+document.addEventListener('cut', (e) => logCopy(e, 'Cut'));
 
 /* ------------------------------------------------------------------ */
-/*  Warning modal                                                      */
+/*  Modals                                                             */
 /* ------------------------------------------------------------------ */
-
-const warningModal = document.getElementById('warning-modal');
-const warningTitle = document.getElementById('warning-title');
-const warningMessage = document.getElementById('warning-message');
 
 /** Check whether any modal backdrop is currently visible. */
 function isAnyModalOpen() {
   return document.querySelectorAll('.modal-backdrop:not(.hidden)').length > 0;
 }
-
-function showWarning(type) {
-  if (type === 'copy') {
-    warningTitle.textContent = '⚠️ Copy Not Allowed';
-    warningMessage.textContent =
-      'There is no need to copy content from this page.';
-  } else {
-    warningTitle.textContent = '⚠️ Paste Not Allowed';
-    warningMessage.textContent =
-      'You are not permitted to enter content from external sources.';
-  }
-  warningModal.classList.remove('hidden');
-}
-
-document.getElementById('warning-close').addEventListener('click', () => {
-  warningModal.classList.add('hidden');
-});
-
-warningModal.addEventListener('click', (e) => {
-  if (e.target === warningModal) warningModal.classList.add('hidden');
-});
 
 /* ------------------------------------------------------------------ */
 /*  Download answers as Markdown                                       */
@@ -423,12 +433,6 @@ emailInput.addEventListener('keydown', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' && e.key !== 'Enter') return;
-
-  /* Warning modal: Enter or Escape closes */
-  if (!warningModal.classList.contains('hidden')) {
-    warningModal.classList.add('hidden');
-    return;
-  }
 
   /* Focus modal: Enter or Escape closes */
   if (!focusModal.classList.contains('hidden')) {
